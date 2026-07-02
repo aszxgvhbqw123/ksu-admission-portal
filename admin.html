@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الإدارة - جامعة الملك سعود</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 'ksu-primary': '#0ea5e9', 'ksu-dark': '#0369a1', 'ksu-darker': '#075985', 'ksu-gold': '#f59e0b', 'ksu-accent': '#06b6d4', 'ksu-green': '#10b981', 'ksu-dark-green': '#059669', 'ksu-emerald': '#10B981', 'ksu-charcoal': '#1F2937' } } } }
+    </script>
+</head>
+<body class="bg-gray-50 font-tajawal min-h-screen">
+    <nav class="nav-glass text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <a href="index.html" class="flex items-center space-x-3 space-x-reverse">
+                        <img src="images/ksu-logo.jpeg" alt="شعار جامعة الملك سعود" class="h-9 w-auto">
+                        <div><h1 class="text-sm font-bold">جامعة الملك سعود</h1></div>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <span class="text-sm text-ksu-gold" id="adminName">الإدارة</span>
+                    <a href="index.html" class="nav-link text-sm">خروج</a>
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobileMenu" class="hidden md:hidden bg-ksu-dark border-t border-ksu-gold border-opacity-20">
+            <div class="px-4 py-3 space-y-2">
+                <a href="#" onclick="switchTab('dashboard')" class="block text-white py-2 hover:text-ksu-gold transition">الرئيسية</a>
+                <a href="#" onclick="switchTab('students')" class="block text-white py-2 hover:text-ksu-gold transition">الطلاب</a>
+                <a href="#" onclick="switchTab('payments')" class="block text-white py-2 hover:text-ksu-gold transition">المدفوعات</a>
+                <a href="#" onclick="switchTab('fees')" class="block text-white py-2 hover:text-ksu-gold transition">الرسوم</a>
+                <a href="#" onclick="switchTab('settings')" class="block text-white py-2 hover:text-ksu-gold transition">الإعدادات</a>
+                <a href="index.html" class="block text-white py-2 hover:text-ksu-gold transition">خروج</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-8 flex justify-between items-center">
+            <div>
+                <h2 class="text-3xl font-bold text-ksu-dark mb-2">لوحة تحكم الإدارة الشاملة</h2>
+                <p class="text-gray-400" id="lastUpdated">آخر تحديث: الآن</p>
+            </div>
+            <div class="flex space-x-3 space-x-reverse">
+                <button id="cloudSyncBtn" onclick="refreshFromCloud()" class="px-4 py-2 bg-ksu-green text-white rounded-lg text-sm font-bold hover:bg-green-600 transition flex items-center space-x-2 space-x-reverse">
+                    <span>🔄 مزامنة من السحابة</span>
+                </button>
+                <button onclick="exportAllData()" class="px-4 py-2 bg-ksu-primary text-white rounded-lg text-sm font-bold hover:bg-ksu-dark transition flex items-center space-x-2 space-x-reverse">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>تصدير</span>
+                </button>
+                <button onclick="refreshAllData()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-200 transition flex items-center space-x-2 space-x-reverse">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>تحديث</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex space-x-1 space-x-reverse mb-8 border-b border-gray-200">
+            <button onclick="switchTab('dashboard')" class="tab-btn active px-5 py-3 text-sm font-bold border-b-2 border-ksu-primary text-ksu-primary transition" data-tab="dashboard">
+                📊 الرئيسية
+            </button>
+            <button onclick="switchTab('students')" class="tab-btn px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-ksu-primary transition" data-tab="students">
+                👥 الطلاب
+            </button>
+            <button onclick="switchTab('payments')" class="tab-btn px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-ksu-primary transition" data-tab="payments">
+                💳 المدفوعات
+            </button>
+            <button onclick="switchTab('fees')" class="tab-btn px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-ksu-primary transition" data-tab="fees">
+                💰 الرسوم
+            </button>
+            <button onclick="switchTab('settings')" class="tab-btn px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-ksu-primary transition" data-tab="settings">
+                ⚙️ الإعدادات
+            </button>
+        </div>
+
+        <!-- Tab: Dashboard -->
+        <div id="tab-dashboard" class="tab-content">
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="card bg-gradient-to-br from-ksu-primary to-ksu-dark text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold mb-1" id="kpiStudents">0</h3>
+                    <p class="text-sm opacity-80">إجمالي الطلاب المسجلين</p>
+                </div>
+                <div class="card bg-gradient-to-br from-ksu-green to-green-600 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold mb-1" id="kpiPayments">0</h3>
+                    <p class="text-sm opacity-80">إجمالي المدفوعات المكتملة</p>
+                </div>
+                <div class="card bg-gradient-to-br from-ksu-gold to-yellow-600 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold mb-1" id="kpiRevenue">0 ر.س</h3>
+                    <p class="text-sm opacity-80">إجمالي الإيرادات</p>
+                </div>
+                <div class="card bg-gradient-to-br from-ksu-accent to-cyan-700 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold mb-1" id="kpiPreferences">0</h3>
+                    <p class="text-sm opacity-80">إجمالي الرغبات المسجلة</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="card">
+                    <h3 class="text-lg font-bold text-ksu-dark mb-4">آخر المسجلين</h3>
+                    <div id="recentStudents" class="space-y-3"></div>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-bold text-ksu-dark mb-4">آخر المدفوعات</h3>
+                    <div id="recentPayments" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-lg font-bold text-ksu-dark mb-4">توزيع التخصصات</h3>
+                <div id="programDistribution" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Students -->
+        <div id="tab-students" class="tab-content hidden">
+            <div class="card">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-ksu-dark">إدارة الطلاب</h3>
+                    <div class="flex space-x-2 space-x-reverse">
+                        <input type="text" id="studentSearch" oninput="filterStudents()" placeholder="بحث..." class="form-input max-w-xs text-sm">
+                        <button onclick="showAddStudentModal()" class="px-4 py-2 bg-ksu-green text-white rounded-lg text-sm font-bold hover:bg-green-600 transition">
+                            + إضافة طالب
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الاسم</th>
+                                <th>رقم الهوية</th>
+                                <th>البريد</th>
+                                <th>الجوال</th>
+                                <th>التخصص</th>
+                                <th>الدفع</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTable"></tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-500 mt-4" id="studentsCount"></p>
+            </div>
+        </div>
+
+        <!-- Tab: Payments -->
+        <div id="tab-payments" class="tab-content hidden">
+            <div class="card">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-ksu-dark">سجل المدفوعات</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الطالب</th>
+                                <th>رقم البطاقة</th>
+                                <th>رقم المعاملة</th>
+                                <th>المبلغ</th>
+                                <th>طريقة الدفع</th>
+                                <th>البريد</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTable"></tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-500 mt-4" id="paymentsCount"></p>
+            </div>
+        </div>
+
+        <!-- Tab: Fees -->
+        <div id="tab-fees" class="tab-content hidden">
+            <div class="card mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-ksu-dark">إدارة هيكل الرسوم</h3>
+                    <button onclick="addFeeRow()" class="px-4 py-2 bg-ksu-green text-white rounded-lg text-sm font-bold hover:bg-green-600 transition">
+                        + إضافة تخصص
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">قم بتعديل رسوم التخصصات. القيم بصيغة (سعودي / غير سعودي / دبلوم).</p>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>التخصص</th>
+                                <th>رسوم السعوديين (ر.س)</th>
+                                <th>رسوم غير السعوديين (ر.س)</th>
+                                <th>رسوم الدبلوم (ر.س)</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feesTable"></tbody>
+                    </table>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                    <p class="text-sm text-gray-500">رسوم التقديم الأساسية: <span id="appFeeDisplay">200</span> ر.س</p>
+                    <div class="flex space-x-2 space-x-reverse">
+                        <button onclick="editAppFee()" class="px-3 py-1 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition">تعديل رسوم التقديم</button>
+                        <button onclick="saveFeeStructure()" class="px-4 py-2 bg-ksu-primary text-white rounded-lg text-sm font-bold hover:bg-ksu-dark transition">💾 حفظ التغييرات</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Settings -->
+        <div id="tab-settings" class="tab-content hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="card">
+                    <h3 class="text-lg font-bold text-ksu-dark mb-4">إدارة البيانات</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                            <div>
+                                <p class="font-bold text-gray-700">بيانات المستخدمين</p>
+                                <p class="text-sm text-gray-500">مسح جميع بيانات المستخدمين المسجلين</p>
+                            </div>
+                            <button onclick="clearData('user_data')" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition">مسح</button>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                            <div>
+                                <p class="font-bold text-gray-700">بيانات المدفوعات</p>
+                                <p class="text-sm text-gray-500">مسح سجل المدفوعات</p>
+                            </div>
+                            <button onclick="clearData('payment_data')" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition">مسح</button>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                            <div>
+                                <p class="font-bold text-gray-700">الرغبات والتفضيلات</p>
+                                <p class="text-sm text-gray-500">مسح جميع الرغبات المسجلة</p>
+                            </div>
+                            <button onclick="clearData('preferences')" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition">مسح</button>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                            <div>
+                                <p class="font-bold text-gray-700">البيانات الأكاديمية</p>
+                                <p class="text-sm text-gray-500">مسح البيانات الأكاديمية</p>
+                            </div>
+                            <button onclick="clearData('academic_data')" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition">مسح</button>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-200">
+                            <div>
+                                <p class="font-bold text-red-700">مسح جميع البيانات</p>
+                                <p class="text-sm text-red-500">إعادة تعيين النظام بالكامل</p>
+                            </div>
+                            <button onclick="clearAllData()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition">مسح الكل</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-bold text-ksu-dark mb-4">إعدادات النظام</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="form-label">رسوم التقديم الأساسية (ر.س)</label>
+                            <input type="number" id="settingsAppFee" class="form-input" value="200" min="0">
+                        </div>
+                        <div>
+                            <label class="form-label">البريد الإلكتروني للإدارة</label>
+                            <input type="email" id="adminEmail" class="form-input" placeholder="admin@ksu.edu.sa">
+                        </div>
+                        <button onclick="AdminEngine.saveSettings()" class="px-4 py-2 bg-ksu-green text-white rounded-lg text-sm font-bold hover:bg-green-600 transition w-full">
+                            💾 حفظ الإعدادات
+                        </button>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                            <div>
+                                <p class="font-bold text-gray-700">حالة النظام</p>
+                                <p class="text-sm text-ksu-green" id="systemStatus">🟢 نشط</p>
+                            </div>
+                            <button onclick="toggleSystemStatus()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-300 transition">إيقاف</button>
+                        </div>
+                        <hr class="border-gray-200">
+                        <div>
+                            <label class="form-label">استيراد بيانات (JSON)</label>
+                            <input type="file" id="importFile" accept=".json" class="form-input text-sm">
+                            <button onclick="importData()" class="mt-2 px-4 py-2 bg-ksu-primary text-white rounded-lg text-sm font-bold hover:bg-ksu-dark transition w-full">استيراد</button>
+                        </div>
+                        <button onclick="exportAllData()" class="px-4 py-2 bg-ksu-gold text-white rounded-lg text-sm font-bold hover:bg-yellow-600 transition w-full">
+                            📥 تصدير جميع البيانات (JSON)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer-gradient text-white py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-ksu-gold mb-1">جامعة الملك سعود - King Saud University</p>
+            <p class="text-sm opacity-70">جميع الحقوق محفوظة &copy; 2026</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
+    <script src="app.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

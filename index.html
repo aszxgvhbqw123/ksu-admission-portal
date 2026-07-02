@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة القبول الموحد - جامعة الملك سعود</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ksu-primary': '#0ea5e9',
+                        'ksu-dark': '#0369a1',
+                        'ksu-darker': '#075985',
+                        'ksu-gold': '#f59e0b',
+                        'ksu-accent': '#06b6d4',
+                        'ksu-green': '#10b981',
+                        'ksu-dark-green': '#059669',
+                        'ksu-emerald': '#10B981',
+                        'ksu-charcoal': '#1F2937'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-tajawal">
+    <nav class="nav-glass text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <img src="images/ksu-logo.jpeg" alt="شعار جامعة الملك سعود" class="h-11 w-auto">
+                        <div>
+                            <h1 class="text-lg font-bold">جامعة الملك سعود</h1>
+                            <p class="text-xs text-ksu-gold">King Saud University</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-8 space-x-reverse">
+                    <a href="index.html" class="nav-link text-ksu-gold font-bold">الرئيسية</a>
+                    <a href="programs.html" class="nav-link hover:text-ksu-gold transition">التخصصات</a>
+                    <a href="login.html" class="nav-link hover:text-ksu-gold transition">تسجيل الدخول</a>
+                    <a href="signup.html" class="nav-link hover:text-ksu-gold transition">إنشاء حساب</a>
+                    <a href="admin.html" class="nav-link hover:text-ksu-gold transition">الإدارة</a>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-ksu-dark border-t border-ksu-gold border-opacity-20">
+            <div class="px-4 py-3 space-y-2">
+                <a href="index.html" class="block text-white py-2 hover:text-ksu-gold transition">الرئيسية</a>
+                <a href="programs.html" class="block text-white py-2 hover:text-ksu-gold transition">التخصصات</a>
+                <a href="login.html" class="block text-white py-2 hover:text-ksu-gold transition">تسجيل الدخول</a>
+                <a href="signup.html" class="block text-white py-2 hover:text-ksu-gold transition">إنشاء حساب</a>
+                <a href="admin.html" class="block text-white py-2 hover:text-ksu-gold transition">الإدارة</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-gradient text-white py-20 md:py-28 relative overflow-hidden">
+        <div class="shimmer absolute inset-0"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <div class="mb-6 float-animation">
+                <img src="images/ksu-logo.jpeg" alt="شعار جامعة الملك سعود" class="h-24 w-auto mx-auto">
+            </div>
+            <h2 class="text-5xl md:text-6xl font-bold mb-4">بوابة القبول الموحد</h2>
+            <p class="text-xl mb-6 text-ksu-gold">Unified Admission Portal</p>
+            <p class="text-lg max-w-2xl mx-auto mb-10 opacity-90">
+                مرحباً بكم في بوابة القبول الموحد لجامعة الملك سعود. سجل الآن وابدأ رحلتك الأكاديمية
+            </p>
+            <div class="flex justify-center space-x-4 space-x-reverse">
+                <a href="signup.html" class="bg-ksu-gold text-white px-10 py-4 rounded-xl font-bold hover:bg-yellow-500 transition shadow-lg text-lg">
+                    إنشاء حساب جديد
+                </a>
+                <a href="login.html" class="border-2 border-white px-10 py-4 rounded-xl font-bold hover:bg-white hover:text-ksu-primary transition text-lg">
+                    تسجيل الدخول
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-3xl font-bold text-center text-ksu-dark mb-2">خدماتنا</h3>
+            <p class="text-center text-gray-400 mb-12">كل ما تحتاجه في مكان واحد</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2 text-gray-800">التسجيل الإلكتروني</h4>
+                    <p class="text-gray-400">سجل بياناتك الشخصية والأكاديمية بسهولة وأمان</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2 text-gray-800">حساب النسبة الموزونة</h4>
+                    <p class="text-gray-400">احسب نسبتك الموزونة تلقائياً حسب معايير الجامعة</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2 text-gray-800">الدفع الإلكتروني الآمن</h4>
+                    <p class="text-gray-400">ادفع رسوم التسجيل عبر طرق دفع متعددة وآمنة</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 bg-blue-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-8 md:p-12 border border-gray-100">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-3xl font-bold text-ksu-dark mb-4">لماذا جامعة الملك سعود؟</h3>
+                        <p class="text-gray-500 mb-6">جامعة الملك سعود هي صرح علمي شامخ يجمع بين الأصالة والحداثة، وتهدف إلى تخريج كوادر متميزة قادرة على المنافسة عالمياً.</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-center space-x-3 space-x-reverse text-gray-700">
+                                <span class="w-6 h-6 bg-ksu-primary rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                                <span>أكثر من 60 عاماً من التميز الأكاديمي</span>
+                            </li>
+                            <li class="flex items-center space-x-3 space-x-reverse text-gray-700">
+                                <span class="w-6 h-6 bg-ksu-primary rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                                <span>اعتماد أكاديمي دولي لجميع البرامج</span>
+                            </li>
+                            <li class="flex items-center space-x-3 space-x-reverse text-gray-700">
+                                <span class="w-6 h-6 bg-ksu-primary rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                                <span>أعضاء هيئة تدريس من أفضل الجامعات العالمية</span>
+                            </li>
+                            <li class="flex items-center space-x-3 space-x-reverse text-gray-700">
+                                <span class="w-6 h-6 bg-ksu-primary rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                                <span>مرافق حديثة ومختبرات متطورة</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-gradient-to-br from-ksu-primary to-ksu-darker rounded-2xl p-8 text-white text-center">
+                        <img src="images/ksu-logo.jpeg" alt="شعار جامعة الملك سعود" class="h-28 w-auto mx-auto mb-4">
+                        <p class="text-2xl font-bold text-ksu-gold">جامعة الملك سعود</p>
+                        <p class="text-sm opacity-80">King Saud University</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer-gradient text-white py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center space-x-3 space-x-reverse mb-4">
+                        <img src="images/ksu-logo.jpeg" alt="شعار جامعة الملك سعود" class="h-10 w-auto">
+                        <div>
+                            <p class="font-bold">جامعة الملك سعود</p>
+                            <p class="text-xs text-ksu-gold">King Saud University</p>
+                        </div>
+                    </div>
+                    <p class="text-sm opacity-70">صرح علمي شامخ لبناء مستقبل مشرق</p>
+                </div>
+                <div>
+                    <p class="font-bold text-ksu-gold mb-3">روابط سريعة</p>
+                    <ul class="space-y-2 text-sm opacity-80">
+                        <li><a href="index.html" class="hover:text-white transition">الرئيسية</a></li>
+                        <li><a href="login.html" class="hover:text-white transition">تسجيل الدخول</a></li>
+                        <li><a href="signup.html" class="hover:text-white transition">إنشاء حساب</a></li>
+                        <li><a href="fees.html" class="hover:text-white transition">الرسوم</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="font-bold text-ksu-gold mb-3">تواصل معنا</p>
+                    <ul class="space-y-2 text-sm opacity-80">
+                        <li>📧 admission@ksu.edu.sa</li>
+                        <li>📞 011-805-5555</li>
+                        <li>📍 الرياض - المملكة العربية السعودية</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-white border-opacity-20 pt-6 text-center">
+                <p class="text-sm opacity-70">جميع الحقوق محفوظة &copy; 2026 جامعة الملك سعود</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Global MFA functions
+        function verifyMFA(mobileNumber) {
+            return Security.verifyMFA(mobileNumber);
+        }
+
+        function resendMFA() {
+            Security.resendMFA();
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
