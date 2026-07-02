@@ -407,7 +407,7 @@ const AdminEngine = {
             }
         });
         localStorage.setItem('fee_structure', JSON.stringify(data.feeStructure));
-        if (typeof SupabaseService !== 'undefined') SupabaseService.saveFeeStructure(data.feeStructure);
+        if (typeof CloudDB !== 'undefined') CloudDB.saveFeeStructure(data.feeStructure);
         Utils.showToast('تم حفظ هيكل الرسوم بنجاح', 'success');
     },
 
@@ -427,7 +427,7 @@ const AdminEngine = {
         const data = this.loadAllData();
         data.feeStructure.applicationFee = val;
         localStorage.setItem('fee_structure', JSON.stringify(data.feeStructure));
-        if (typeof SupabaseService !== 'undefined') SupabaseService.saveFeeStructure(data.feeStructure);
+        if (typeof CloudDB !== 'undefined') CloudDB.saveFeeStructure(data.feeStructure);
         Utils.closeModal();
         Utils.showToast('تم تعديل رسوم التقديم', 'success');
         this.refresh();
@@ -454,7 +454,7 @@ const AdminEngine = {
         localStorage.setItem('admin_email', email);
         
         // Sync to Supabase
-        if (typeof SupabaseService !== 'undefined') SupabaseService.saveFeeStructure(data.feeStructure);
+        if (typeof CloudDB !== 'undefined') CloudDB.saveFeeStructure(data.feeStructure);
         
         Utils.showToast('تم حفظ الإعدادات بنجاح', 'success');
         this.refresh();
@@ -464,7 +464,7 @@ const AdminEngine = {
     clearData(key) {
         if (!confirm(`هل أنت متأكد من مسح ${key}؟`)) return;
         DataStore.clear(key);
-        if (typeof SupabaseService !== 'undefined') SupabaseService.clear(key);
+        if (typeof CloudDB !== 'undefined') CloudDB.delete(key);
         Utils.showToast(`تم مسح ${key}`, 'success');
         this.refresh();
     },
@@ -473,7 +473,7 @@ const AdminEngine = {
         if (!confirm('هل أنت متأكد من مسح جميع بيانات النظام؟')) return;
         if (!confirm('تأكيد: سيتم فقدان جميع البيانات!' )) return;
         const keys = ['user_data', 'academic_data', 'preferences', 'payment_data', 'users', 'fee_structure', 'csrf_token', 'mfa_code', 'mfa_mobile', 'all_user_data', 'all_academic_data', 'all_preferences', 'all_payment_data'];
-        keys.forEach(k => { DataStore.clear(k); if (typeof SupabaseService !== 'undefined') SupabaseService.clear(k); });
+        keys.forEach(k => { DataStore.clear(k); if (typeof CloudDB !== 'undefined') CloudDB.delete(k); });
         Utils.showToast('تم مسح جميع البيانات', 'success');
         this.refresh();
     }
@@ -503,14 +503,14 @@ function importData() {
             Object.entries(data).forEach(([key, val]) => localStorage.setItem(key, JSON.stringify(val)));
             // Sync imported data to Supabase
             const syncKeys = { user_data: 'students', academic_data: 'academic_records', preferences: 'preferences', payment_data: 'payments', users: 'admin_users' };
-            for (const [key, table] of Object.entries(syncKeys)) {
+            for (const [key] of Object.entries(syncKeys)) {
                 if (data[`all_${key}`] && Array.isArray(data[`all_${key}`])) {
                     for (const entry of data[`all_${key}`]) {
                         const rowData = entry.data || entry;
-                        if (typeof SupabaseService !== 'undefined') await SupabaseService.save(key, rowData);
+                        if (typeof CloudDB !== 'undefined') await CloudDB.save(key, rowData);
                     }
                 } else if (data[key]) {
-                    if (typeof SupabaseService !== 'undefined') await SupabaseService.save(key, { ...data[key], table });
+                    if (typeof CloudDB !== 'undefined') await CloudDB.save(key, { ...data[key] });
                 }
             }
             Utils.showToast('تم استيراد البيانات ومزامنتها مع السحابة', 'success');
@@ -558,60 +558,29 @@ function getPaymentMethodName(method) {
 // Fetches all data from Supabase and caches in localStorage for sync rendering
 async function refreshFromCloud() {
     const btn = document.getElementById('cloudSyncBtn');
-    if (btn) { btn.disabled = true; btn.innerHTML = 'جاري المزامنة...'; }
+    const statusEl = document.getElementById('cloudStatus');
+    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ جاري المزامنة...'; }
+    if (statusEl) { statusEl.textContent = '⏳ جاري المزامنة...'; statusEl.className = 'text-sm text-yellow-500'; }
 
     try {
-        // Fetch all history from Supabase
-        const [userHistory, academicHistory, prefHistory, paymentHistory, adminUsers, feeData] = await Promise.all([
-            SupabaseService.getHistory('user_data'),
-            SupabaseService.getHistory('academic_data'),
-            SupabaseService.getHistory('preferences'),
-            SupabaseService.getHistory('payment_data'),
-            SupabaseService.getUsers(),
-            SupabaseService.getFeeStructure()
-        ]);
+        // Sync all cloud data to localStorage
+        const results = await CloudDB.syncAllToLocal();
 
-        // Flatten history arrays into localStorage format (enveloped)
-        const toEnveloped = (arr) => arr.map(item => ({ data: item, _savedAt: item._savedAt || new Date().toISOString(), _id: item._id || Date.now() }));
-
-        // Write to localStorage for sync DataStore reads
-        if (userHistory.length > 0) {
-            localStorage.setItem('all_user_data', JSON.stringify(toEnveloped(userHistory)));
-            const latest = userHistory[userHistory.length - 1];
-            const { created_at, ...latestData } = latest;
-            localStorage.setItem('user_data', JSON.stringify(latestData));
-        }
-        if (academicHistory.length > 0) {
-            localStorage.setItem('all_academic_data', JSON.stringify(toEnveloped(academicHistory)));
-            const latest = academicHistory[academicHistory.length - 1];
-            const { created_at, ...latestData } = latest;
-            localStorage.setItem('academic_data', JSON.stringify(latestData));
-        }
-        if (prefHistory.length > 0) {
-            localStorage.setItem('all_preferences', JSON.stringify(toEnveloped(prefHistory)));
-            const latest = prefHistory[prefHistory.length - 1];
-            const { created_at, ...latestData } = latest;
-            localStorage.setItem('preferences', JSON.stringify(latestData));
-        }
-        if (paymentHistory.length > 0) {
-            localStorage.setItem('all_payment_data', JSON.stringify(toEnveloped(paymentHistory)));
-            const latest = paymentHistory[paymentHistory.length - 1];
-            const { created_at, ...latestData } = latest;
-            localStorage.setItem('payment_data', JSON.stringify(latestData));
-        }
-        if (adminUsers.length > 0) {
-            localStorage.setItem('users', JSON.stringify(adminUsers));
-        }
-        if (feeData) {
-            localStorage.setItem('fee_structure', JSON.stringify(feeData));
-        }
-
+        // Reload admin UI
         AdminEngine.refresh();
+
         if (btn) { btn.disabled = false; btn.innerHTML = '✓ تمت المزامنة'; setTimeout(() => { btn.innerHTML = '🔄 مزامنة من السحابة'; }, 3000); }
+        if (statusEl) {
+            const total = Object.values(results).reduce((a, b) => a + (b > 0 ? b : 0), 0);
+            statusEl.textContent = `☁️ متصل - ${total} سجل مستورد`;
+            statusEl.className = 'text-sm text-ksu-green';
+        }
+        Utils.showToast('تمت المزامنة مع السحابة', 'success');
     } catch (e) {
         console.error('Cloud sync failed:', e);
         if (btn) { btn.disabled = false; btn.innerHTML = '❌ فشلت المزامنة'; setTimeout(() => { btn.innerHTML = '🔄 مزامنة من السحابة'; }, 3000); }
-        Utils.showToast('فشلت المزامنة من السحابة، استخدم البيانات المحلية', 'warning');
+        if (statusEl) { statusEl.textContent = '☁️ غير متصل'; statusEl.className = 'text-sm text-red-500'; }
+        Utils.showToast('فشلت المزامنة من السحابة - استخدم البيانات المحلية', 'warning');
         AdminEngine.refresh();
     }
 }
@@ -705,7 +674,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('loginOverlay').classList.add('hidden');
         AdminEngine.init();
         switchTab('dashboard');
+        // Initial cloud sync
         setTimeout(() => refreshFromCloud(), 500);
+        // Auto-retry failed syncs every 15s
+        CloudSync.startAutoRetry(15000);
+        // Auto-refresh from cloud every 30s
+        setInterval(() => {
+            if (typeof refreshFromCloud === 'function') {
+                refreshFromCloud();
+            }
+        }, 30000);
     }
     // Enter key triggers login
     document.getElementById('loginPassword').addEventListener('keydown', (e) => {
@@ -714,5 +692,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginEmail').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') document.getElementById('loginPassword').focus();
     });
-    console.log('KSU Admin Dashboard loaded with Supabase cloud sync');
+    console.log('KSU Admin Dashboard loaded with professional cloud sync');
 });

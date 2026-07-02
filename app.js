@@ -13,30 +13,71 @@ const AppState = {
     totalSteps: 5
 };
 
-// Supabase Cloud Storage - fire-and-forget sync on top of localStorage
-const CloudSync = {
-    pendingOps: 0,
+// Cloud Sync Status
+const CloudStatus = {
+    ok: false,
+    lastSync: null,
+    pendingCount: 0,
+    errorCount: 0,
 
-    async sync(key, data) {
-        this.pendingOps++;
+    markOk() { this.ok = true; this.lastSync = Date.now(); },
+    markError() { this.ok = false; this.errorCount++; },
+    reset() { this.ok = false; this.lastSync = null; this.errorCount = 0; }
+};
+
+// Cloud Sync Engine - saves to Supabase with retry
+const CloudSync = {
+    _queue: [],
+    _processing: false,
+
+    async save(key, data) {
         try {
-            await SupabaseService.save(key, data);
+            CloudStatus.pendingCount++;
+            await CloudDB.save(key, data);
+            CloudStatus.markOk();
+            console.log(`[CloudSync] Saved ${key} to cloud`);
+            return true;
         } catch (e) {
-            console.warn('Cloud sync failed for', key, e);
+            CloudStatus.markError();
+            console.warn(`[CloudSync] Failed ${key}:`, e.message);
+            this._queue.push({ key, data, retries: 0 });
+            return false;
         } finally {
-            this.pendingOps--;
+            CloudStatus.pendingCount--;
         }
     },
 
-    async syncDelete(key) {
-        this.pendingOps++;
+    async delete(key) {
         try {
-            await SupabaseService.clear(key);
+            await CloudDB.delete(key);
+            return true;
         } catch (e) {
-            console.warn('Cloud delete failed for', key, e);
-        } finally {
-            this.pendingOps--;
+            console.warn(`[CloudSync] Delete failed ${key}:`, e.message);
+            return false;
         }
+    },
+
+    async retryAll() {
+        const items = [...this._queue];
+        this._queue = [];
+        for (const item of items) {
+            try {
+                item.retries++;
+                await CloudDB.save(item.key, item.data);
+                console.log(`[CloudSync] Retry OK: ${item.key}`);
+            } catch (e) {
+                if (item.retries < 3) {
+                    this._queue.push(item);
+                }
+                console.warn(`[CloudSync] Retry ${item.retries}/3 failed: ${item.key}`);
+            }
+        }
+    },
+
+    async startAutoRetry(interval = 15000) {
+        setInterval(() => {
+            if (this._queue.length > 0) this.retryAll();
+        }, interval);
     }
 };
 
@@ -399,28 +440,66 @@ const formatExpiryDate = (expiry) => {
 
 // Persistent Data Store with History (localStorage + Cloud sync)
 const DataStore = {
-    save(key, data) {
+    save(key, data, sync = true) {
         localStorage.setItem(key, JSON.stringify(data));
         const historyKey = `all_${key}`;
         const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
         const entry = { data: data, _savedAt: new Date().toISOString(), _id: Date.now() + '_' + Math.random().toString(36).substr(2, 5) };
         history.push(entry);
         localStorage.setItem(historyKey, JSON.stringify(history));
-        // Fire-and-forget cloud sync
-        if (typeof CloudSync !== 'undefined') CloudSync.sync(key, data);
+        // Cloud sync
+        if (sync && typeof CloudSync !== 'undefined') {
+            CloudSync.save(key, data);
+        }
         return entry;
     },
     getCurrent(key) {
+        // Try cloud cache first, then localStorage
+        try {
+            const cached = localStorage.getItem(`_cloud_${key}`);
+            if (cached) return JSON.parse(cached);
+        } catch (e) { /* ignore */ }
         try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
     },
     getHistory(key) {
+        // Try cloud cache first (professionally formatted)
+        try {
+            const cached = localStorage.getItem(`_cloud_all_${key}`);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return parsed.map(r => ({
+                        data: r,
+                        _savedAt: r._savedAt || r.createdAt || new Date().toISOString(),
+                        _id: r._id || Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                    }));
+                }
+            }
+        } catch (e) { /* ignore */ }
+        // Fallback to local history
         const historyKey = `all_${key}`;
         try { return JSON.parse(localStorage.getItem(historyKey) || '[]'); } catch (e) { return []; }
     },
     clear(key) {
         localStorage.removeItem(key);
         localStorage.removeItem(`all_${key}`);
-        if (typeof CloudSync !== 'undefined') CloudSync.syncDelete(key);
+        localStorage.removeItem(`_cloud_${key}`);
+        localStorage.removeItem(`_cloud_all_${key}`);
+        if (typeof CloudSync !== 'undefined') CloudSync.delete(key);
+    },
+    async refreshFromCloud(key) {
+        try {
+            const records = await CloudDB.fetch(key);
+            if (records && records.length > 0) {
+                const wrapped = records.map(r => ({ data: r, _savedAt: r._savedAt || new Date().toISOString(), _id: Date.now() }));
+                localStorage.setItem(`all_${key}`, JSON.stringify(wrapped));
+                localStorage.setItem(key, JSON.stringify(records[records.length - 1]));
+                return records;
+            }
+        } catch (e) {
+            console.warn(`[DataStore] refreshFromCloud failed for ${key}:`, e.message);
+        }
+        return null;
     }
 };
 
