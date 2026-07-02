@@ -217,21 +217,89 @@ const AdminEngine = {
         const users = this.collectUsers();
         const u = users[index];
         if (!u) return;
+        const data = this.loadAllData();
+        const email = u.email || '';
+        const natId = u.nationalID || '';
+
+        // Find academic data by email
+        const acadEntry = data.allAcademic.find(a => {
+            const ad = a.data || a;
+            return ad.studentEmail === email;
+        });
+        const acad = acadEntry ? (acadEntry.data || acadEntry) : null;
+
+        // Find preferences by email
+        const prefEntry = data.allPreferences.find(p => {
+            const items = p.data || p;
+            if (Array.isArray(items)) return items.some(i => i.studentEmail === email);
+            return items.studentEmail === email;
+        });
+        const prefs = prefEntry ? (prefEntry.data || prefEntry) : [];
+        const prefList = Array.isArray(prefs) ? prefs.map(p => p.collegeName || p.program || '').filter(Boolean) : [];
+
+        // Find payment by email or nationalID
+        const payEntry = data.allPayments.find(p => {
+            const pd = p.data || p;
+            return pd.studentEmail === email || pd.studentNationalID === natId || pd.cardholderName === u.fullNameArabic;
+        });
+        const pay = payEntry ? (payEntry.data || payEntry) : null;
+
         const msg = `
-            <div class="text-right">
-                <h3 class="text-lg font-bold text-ksu-dark mb-4">بيانات الطالب</h3>
-                <div class="space-y-2">
-                    <p><span class="font-bold">الاسم:</span> ${u.fullNameArabic || '---'}</p>
-                    <p><span class="font-bold">الاسم بالإنجليزية:</span> ${u.fullNameEnglish || '---'}</p>
-                    <p><span class="font-bold">رقم الهوية:</span> ${u.nationalID || '---'}</p>
-                    <p><span class="font-bold">البريد:</span> ${u.email || '---'}</p>
-                    <p><span class="font-bold">الجوال:</span> ${u.mobile || '---'}</p>
-                    <p><span class="font-bold">الجنسية:</span> ${u.nationality === 'saudi' ? 'سعودي' : 'غير سعودي'}</p>
-                    <p><span class="font-bold">تاريخ التسجيل:</span> ${u.registeredAt || '---'}</p>
+            <div class="text-right max-h-[80vh] overflow-y-auto">
+                <div class="bg-gradient-to-l from-ksu-primary to-ksu-dark text-white p-4 rounded-t-xl">
+                    <h3 class="text-lg font-bold">الملف الكامل للطالب</h3>
+                    <p class="text-sm opacity-80">${u.fullNameArabic || ''}</p>
                 </div>
+                <div class="p-4 space-y-4">
+                    <!-- Personal Info -->
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <h4 class="font-bold text-ksu-dark mb-3 border-b border-gray-200 pb-2">📋 المعلومات الشخصية</h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div><span class="text-gray-500">الاسم:</span><br><span class="font-bold">${u.fullNameArabic || '---'}</span></div>
+                            <div><span class="text-gray-500">الاسم بالإنجليزية:</span><br><span class="font-bold">${u.fullNameEnglish || '---'}</span></div>
+                            <div><span class="text-gray-500">رقم الهوية:</span><br><span class="font-bold font-mono">${u.nationalID || '---'}</span></div>
+                            <div><span class="text-gray-500">البريد الإلكتروني:</span><br><span class="font-bold">${u.email || '---'}</span></div>
+                            <div><span class="text-gray-500">رقم الجوال:</span><br><span class="font-bold">${u.mobile || '---'}</span></div>
+                            <div><span class="text-gray-500">الجنسية:</span><br><span class="font-bold">${u.nationality === 'saudi' ? '🇸🇦 سعودي' : '🌍 غير سعودي'}</span></div>
+                        </div>
+                    </div>
+
+                    ${acad ? `
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <h4 class="font-bold text-ksu-dark mb-3 border-b border-gray-200 pb-2">🎓 البيانات الأكاديمية</h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div><span class="text-gray-500">نوع الثانوية:</span><br><span class="font-bold">${acad.highSchoolType === 'scientific' ? 'علمي' : acad.highSchoolType === 'literary' ? 'أدبي' : acad.highSchoolType || '---'}</span></div>
+                            <div><span class="text-gray-500">سنة التخرج:</span><br><span class="font-bold">${acad.graduationYear || '---'}</span></div>
+                            <div><span class="text-gray-500">معدل الثانوية:</span><br><span class="font-bold">${acad.highSchoolGPA || '---'}%</span></div>
+                            <div><span class="text-gray-500">اختبار القدرات:</span><br><span class="font-bold">${acad.quduratScore || '---'}</span></div>
+                            <div><span class="text-gray-500">اختبار التحصيلي:</span><br><span class="font-bold">${acad.tahsiliScore || '---'}</span></div>
+                            <div><span class="text-gray-500">المعدل الموزون:</span><br><span class="font-bold text-ksu-gold">${acad.weightedAverage || '---'}%</span></div>
+                        </div>
+                    </div>` : ''}
+
+                    ${prefList.length > 0 ? `
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <h4 class="font-bold text-ksu-dark mb-3 border-b border-gray-200 pb-2">📌 الرغبات المسجلة</h4>
+                        <ol class="list-decimal list-inside space-y-1 text-sm">
+                            ${prefList.map((p, i) => `<li class="${i === 0 ? 'font-bold text-ksu-primary' : 'text-gray-700'}">${p}</li>`).join('')}
+                        </ol>
+                    </div>` : ''}
+
+                    ${pay ? `
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <h4 class="font-bold text-ksu-dark mb-3 border-b border-gray-200 pb-2">💳 معلومات الدفع</h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div><span class="text-gray-500">حالة الدفع:</span><br><span class="font-bold ${pay.status === 'completed' ? 'text-ksu-green' : 'text-yellow-500'}">${pay.status === 'completed' ? '✅ مكتمل' : pay.status || 'معلق'}</span></div>
+                            <div><span class="text-gray-500">المبلغ:</span><br><span class="font-bold text-ksu-gold">${(pay.totalAmount || 0).toLocaleString('ar-SA')} ر.س</span></div>
+                            <div><span class="text-gray-500">طريقة الدفع:</span><br><span class="font-bold">${getPaymentMethodName(pay.paymentMethod) || '---'}</span></div>
+                            <div><span class="text-gray-500">رقم المعاملة:</span><br><span class="font-bold font-mono text-xs">${pay.transactionId || '---'}</span></div>
+                        </div>
+                    </div>` : ''}
+                </div>
+                <button onclick="Utils.closeModal()" class="w-full py-3 bg-gradient-to-l from-ksu-primary to-ksu-dark text-white rounded-b-xl font-bold hover:shadow-lg transition">إغلاق</button>
             </div>
         `;
-        Utils.showModal(msg + '<button onclick="Utils.closeModal()" class="mt-4 px-4 py-2 bg-gray-200 rounded-lg text-sm">إغلاق</button>');
+        Utils.showModal(msg);
     },
 
     deleteStudent(index) {
