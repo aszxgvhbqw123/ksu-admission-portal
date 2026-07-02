@@ -77,9 +77,26 @@ const CloudDB = {
         return res;
     },
 
+    // XHR fallback for browsers with CORS issues
+    _xhr(method, path, body) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(method, `${SUPABASE_URL}${path}`);
+            const headers = this._apiHeaders();
+            for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
+                else reject(new Error(`HTTP ${xhr.status}: ${xhr.responseText}`));
+            };
+            xhr.onerror = () => reject(new Error('XHR network error'));
+            xhr.send(body);
+        });
+    },
+
     async save(key, data) {
         const table = this._table(key);
         const row = { ...this._toSnake(data), created_at: new Date().toISOString() };
+        const body = JSON.stringify(row);
 
         // Try SDK first
         const client = this._client();
@@ -88,24 +105,28 @@ const CloudDB = {
                 const { error } = await client.from(table).insert(row);
                 if (error) throw error;
                 localStorage.setItem(`_cloud_${key}`, JSON.stringify(data));
-                console.log(`[CloudDB] Saved ${key} to ${table}`);
                 return true;
             } catch (e) {
                 console.warn(`[CloudDB] SDK insert failed for ${key}:`, e.message);
             }
         }
 
-        // Fallback: direct REST API
+        // Fallback: REST API via fetch
         try {
-            const res = await this._fetch(`/rest/v1/${table}`, {
-                method: 'POST',
-                body: JSON.stringify(row)
-            });
+            await this._fetch(`/rest/v1/${table}`, { method: 'POST', body });
             localStorage.setItem(`_cloud_${key}`, JSON.stringify(data));
-            console.log(`[CloudDB] REST saved ${key} to ${table}`);
             return true;
         } catch (e) {
-            console.error(`[CloudDB] All attempts failed for ${key}:`, e.message);
+            console.warn(`[CloudDB] REST fetch failed for ${key}:`, e.message);
+        }
+
+        // Final fallback: REST API via XHR (bypasses some CORS issues)
+        try {
+            await this._xhr('POST', `/rest/v1/${table}`, body);
+            localStorage.setItem(`_cloud_${key}`, JSON.stringify(data));
+            return true;
+        } catch (e) {
+            console.error(`[CloudDB] All 3 attempts failed for ${key}:`, e.message);
             throw e;
         }
     },
