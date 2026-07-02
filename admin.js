@@ -657,11 +657,62 @@ function toggleSystemStatus() {
     statusEl.className = isActive ? 'text-sm text-red-500' : 'text-sm text-ksu-green';
 }
 
+// ==================== ADMIN LOGIN ====================
+const ADMIN_EMAIL = 'aszxgvhbqw@gmail.com';
+const ADMIN_PASSWORD = 'aszxgvhbqw123Q@12SA';
+const SESSION_KEY = 'ksu_admin_session';
+
+function isLoggedIn() {
+    try {
+        const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+        if (session && session.email === ADMIN_EMAIL && session.expires > Date.now()) return true;
+    } catch (e) { /* ignore */ }
+    return false;
+}
+
+function saveSession() {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+        email: ADMIN_EMAIL,
+        expires: Date.now() + 24 * 60 * 60 * 1000
+    }));
+}
+
+function adminLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errEl = document.getElementById('loginError');
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        saveSession();
+        document.getElementById('loginOverlay').classList.add('hidden');
+        errEl.classList.add('hidden');
+        AdminEngine.init();
+        switchTab('dashboard');
+        setTimeout(() => refreshFromCloud(), 500);
+    } else {
+        errEl.textContent = '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        errEl.classList.remove('hidden');
+    }
+}
+
+function adminLogout() {
+    localStorage.removeItem(SESSION_KEY);
+    location.reload();
+}
+
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-    AdminEngine.init();
-    switchTab('dashboard');
-    // Try to sync from cloud on load
-    setTimeout(() => refreshFromCloud(), 500);
+    if (isLoggedIn()) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        AdminEngine.init();
+        switchTab('dashboard');
+        setTimeout(() => refreshFromCloud(), 500);
+    }
+    // Enter key triggers login
+    document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') adminLogin();
+    });
+    document.getElementById('loginEmail').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+    });
     console.log('KSU Admin Dashboard loaded with Supabase cloud sync');
 });

@@ -23,7 +23,7 @@
                 </div>
                 <div class="flex items-center space-x-4 space-x-reverse">
                     <span class="text-sm text-ksu-gold" id="adminName">الإدارة</span>
-                    <a href="index.html" class="nav-link text-sm">خروج</a>
+                    <a href="#" onclick="adminLogout()" class="nav-link text-sm">خروج</a>
                     <button onclick="toggleMobileMenu()" class="md:hidden text-white">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -39,7 +39,7 @@
                 <a href="#" onclick="switchTab('payments')" class="block text-white py-2 hover:text-ksu-gold transition">المدفوعات</a>
                 <a href="#" onclick="switchTab('fees')" class="block text-white py-2 hover:text-ksu-gold transition">الرسوم</a>
                 <a href="#" onclick="switchTab('settings')" class="block text-white py-2 hover:text-ksu-gold transition">الإعدادات</a>
-                <a href="index.html" class="block text-white py-2 hover:text-ksu-gold transition">خروج</a>
+                <a href="#" onclick="adminLogout()" class="block text-white py-2 hover:text-ksu-gold transition">خروج</a>
             </div>
         </div>
     </nav>
@@ -324,6 +324,31 @@
             <p class="text-sm opacity-70">جميع الحقوق محفوظة &copy; 2026</p>
         </div>
     </footer>
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 z-[9999] bg-gray-900 bg-opacity-95 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+            <div class="text-center mb-6">
+                <img src="images/ksu-logo.jpeg" alt="شعار جامعة الملك سعود" class="h-16 w-auto mx-auto mb-4">
+                <h2 class="text-2xl font-bold text-ksu-dark">لوحة تحكم الإدارة</h2>
+                <p class="text-gray-500 text-sm mt-1">جامعة الملك سعود</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="admin@ksu.edu.sa" dir="ltr">
+                </div>
+                <div>
+                    <label class="form-label">كلمة المرور</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" dir="ltr">
+                </div>
+                <button onclick="adminLogin()" class="w-full py-3 bg-gradient-to-l from-ksu-primary to-ksu-dark text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all duration-300">
+                    تسجيل الدخول
+                </button>
+                <p id="loginError" class="text-red-500 text-sm text-center hidden"></p>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="supabase.js"></script>
