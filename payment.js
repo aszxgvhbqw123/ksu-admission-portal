@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             AppState.formData.payment.timestamp = new Date().toISOString();
             
             DataStore.save('payment_data', AppState.formData.payment);
+            if (typeof CloudDB !== 'undefined') CloudDB.save('payment_data', AppState.formData.payment).catch(() => {});
             
             // Show success modal
             showPaymentSuccess(sanitizedData);

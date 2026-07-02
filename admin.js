@@ -590,6 +590,58 @@ function importData() {
 
 function refreshAllData() { AdminEngine.refresh(); Utils.showToast('تم تحديث البيانات', 'success'); }
 
+// Upload all local data to cloud (for data that was saved before cloud was connected)
+async function uploadLocalToCloud() {
+    if (!confirm('هل تريد رفع جميع البيانات المحلية إلى السحابة؟')) return;
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ جاري الرفع...';
+
+    const keys = ['user_data', 'academic_data', 'preferences', 'payment_data'];
+    let total = 0, success = 0;
+    const uploaded = [];
+
+    for (const key of keys) {
+        const allData = DataStore.getHistory(key);
+        for (const entry of allData) {
+            const data = entry.data || entry;
+            if (data && typeof data === 'object') {
+                total++;
+                try {
+                    await CloudDB.save(key, data);
+                    success++;
+                    uploaded.push(key);
+                } catch (e) {
+                    console.warn(`[UploadLocal] Failed ${key}:`, e);
+                }
+            }
+        }
+    }
+
+    // Also upload fee structure
+    try {
+        const feeData = JSON.parse(localStorage.getItem('fee_structure'));
+        if (feeData) {
+            await CloudDB.saveFeeStructure(feeData);
+            success++;
+        }
+    } catch (e) { /* ignore */ }
+
+    // Upload admin users
+    try {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        for (const u of users) {
+            await CloudDB.save('admin_users', u);
+            success++;
+        }
+    } catch (e) { /* ignore */ }
+
+    btn.disabled = false;
+    btn.innerHTML = '☁️ رفع جميع البيانات المحلية إلى السحابة';
+    Utils.showToast(`✅ تم رفع ${success} من ${total + 1} سجل إلى السحابة`, 'success');
+    AdminEngine.refresh();
+}
+
 function showPaymentDetail(index) {
     const data = AdminEngine.loadAllData();
     const allPayments = data.allPayments;

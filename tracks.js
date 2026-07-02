@@ -295,6 +295,7 @@ function submitPreferences() {
     
     // Store preferences with history
     DataStore.save('preferences', AppState.formData.preferences);
+    if (typeof CloudDB !== 'undefined') CloudDB.save('preferences', AppState.formData.preferences).catch(() => {});
     
     // Show confirmation
     const preferencesList = AppState.formData.preferences.map((pref, index) => 

@@ -133,13 +133,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Store user data with history
             DataStore.save('user_data', sanitizedData);
             
+            // Try cloud sync and show result
+            let cloudMsg = '';
+            try {
+                const saved = await CloudDB.save('user_data', sanitizedData);
+                if (saved) {
+                    cloudMsg = '<p class="text-ksu-green text-sm mt-2">☁️ تم الحفظ في السحابة بنجاح</p>';
+                }
+            } catch (e) {
+                cloudMsg = '<p class="text-yellow-500 text-sm mt-2">☁️ سيتم الرفع للسحابة تلقائياً لاحقاً</p>';
+            }
+            
             // Show success message
             Utils.showModal(`
                 <div class="text-center">
                     <div class="text-green-500 text-4xl mb-4">✓</div>
                     <h3 class="text-lg font-bold text-green-600 mb-4">تم إنشاء الحساب بنجاح</h3>
-                    <p class="text-gray-600 mb-6">تم إرسال رسالة تأكيد إلى بريدك الإلكتروني</p>
-                    <a href="login.html" class="bg-ksu-green text-white px-6 py-2 rounded-lg inline-block">
+                    <p class="text-gray-600 mb-2">تم إرسال رسالة تأكيد إلى بريدك الإلكتروني</p>
+                    ${cloudMsg}
+                    <a href="login.html" class="mt-4 bg-ksu-green text-white px-6 py-2 rounded-lg inline-block">
                         الانتقال إلى تسجيل الدخول
                     </a>
                 </div>

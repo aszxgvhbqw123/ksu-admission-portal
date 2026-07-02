@@ -73,6 +73,7 @@ function calculateFees(preferences) {
     AppState.formData.payment.totalAmount = totalFees;
     AppState.formData.payment.orderNumber = document.getElementById('orderNumber').textContent;
     DataStore.save('payment_data', AppState.formData.payment);
+    if (typeof CloudDB !== 'undefined') CloudDB.save('payment_data', AppState.formData.payment).catch(() => {});
 }
 
 function proceedToPayment() {
