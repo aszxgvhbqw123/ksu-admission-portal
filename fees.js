@@ -25,17 +25,38 @@ const collegeFees = {
     'الطب البشري': { saudi: 25000, nonSaudi: 150000, diploma: null },
     'طب الأسنان': { saudi: 20000, nonSaudi: 120000, diploma: null },
     'الصيدلة': { saudi: 15000, nonSaudi: 100000, diploma: null },
-    'العلوم الطبية التطبيقية': { saudi: 12000, nonSaudi: 80000, diploma: 45000 },
-    'علوم الحاسب': { saudi: 10000, nonSaudi: 70000, diploma: 35000 },
-    'الأمن السيبراني': { saudi: 12000, nonSaudi: 75000, diploma: 40000 },
-    'الهندسة المدنية': { saudi: 8000, nonSaudi: 65000, diploma: 32000 },
-    'الهندسة الكهربائية': { saudi: 8000, nonSaudi: 65000, diploma: 32000 },
-    'الهندسة الميكانيكية': { saudi: 8000, nonSaudi: 65000, diploma: 32000 },
-    'القانون': { saudi: 7000, nonSaudi: 50000, diploma: 25000 },
-    'إدارة الأعمال': { saudi: 8000, nonSaudi: 55000, diploma: 28000 },
-    'اللغات والترجمة': { saudi: 5000, nonSaudi: 45000, diploma: 22000 },
-    'الآداب والعلوم الإنسانية': { saudi: 4000, nonSaudi: 40000, diploma: 20000 },
-    'التربية': { saudi: 4000, nonSaudi: 40000, diploma: 20000 }
+    'العلوم الطبية التطبيقية': { saudi: 12000, nonSaudi: 80000, diploma: null },
+    'الهندسة المدنية': { saudi: 8000, nonSaudi: 65000, diploma: null },
+    'الهندسة الكهربائية': { saudi: 8000, nonSaudi: 65000, diploma: null },
+    'الهندسة الميكانيكية': { saudi: 8000, nonSaudi: 65000, diploma: null },
+    'الآداب والعلوم الإنسانية': { saudi: 4000, nonSaudi: 40000, diploma: null },
+    'التربية': { saudi: 4000, nonSaudi: 40000, diploma: null },
+    'الأمن السيبراني الطبي': { saudi: 12000, nonSaudi: 75000, diploma: 4500 },
+    'إدارة المستشفيات': { saudi: 10000, nonSaudi: 70000, diploma: 4200 },
+    'التقنية الصحية': { saudi: 12000, nonSaudi: 80000, diploma: 4800 },
+    'الأشعة التشخيصية': { saudi: 13000, nonSaudi: 85000, diploma: 4600 },
+    'التمريض العام': { saudi: 11000, nonSaudi: 75000, diploma: 4400 },
+    'الأمن السيبراني': { saudi: 12000, nonSaudi: 75000, diploma: 4000 },
+    'علوم الحاسب': { saudi: 10000, nonSaudi: 70000, diploma: 3500 },
+    'الشبكات والاتصالات': { saudi: 10000, nonSaudi: 65000, diploma: 3800 },
+    'هندسة البرمجيات': { saudi: 10000, nonSaudi: 70000, diploma: 3600 },
+    'الذكاء الاصطناعي': { saudi: 12000, nonSaudi: 80000, diploma: 4200 },
+    'أنظمة المعلومات': { saudi: 9000, nonSaudi: 65000, diploma: 3400 },
+    'إدارة البيانات وتحليلها': { saudi: 10000, nonSaudi: 70000, diploma: 3700 },
+    'إدارة الأعمال': { saudi: 8000, nonSaudi: 55000, diploma: 2800 },
+    'المحاسبة والمراجعة': { saudi: 8000, nonSaudi: 55000, diploma: 2500 },
+    'التسويق الرقمي': { saudi: 8000, nonSaudi: 55000, diploma: 3000 },
+    'الموارد البشرية': { saudi: 7000, nonSaudi: 50000, diploma: 2700 },
+    'إدارة المشاريع': { saudi: 8000, nonSaudi: 55000, diploma: 2900 },
+    'إدارة اللوجستيات وسلاسل الإمداد': { saudi: 8000, nonSaudi: 55000, diploma: 3100 },
+    'المالية والاستثمار': { saudi: 9000, nonSaudi: 60000, diploma: 3200 },
+    'اللغات والترجمة': { saudi: 5000, nonSaudi: 45000, diploma: 2200 },
+    'القانون': { saudi: 7000, nonSaudi: 50000, diploma: 2000 },
+    'الإعلام الرقمي': { saudi: 6000, nonSaudi: 45000, diploma: 2400 },
+    'علم النفس التطبيقي': { saudi: 5000, nonSaudi: 40000, diploma: 2100 },
+    'التربية الخاصة': { saudi: 5000, nonSaudi: 40000, diploma: 2000 },
+    'التاريخ والحضارة الإسلامية': { saudi: 4000, nonSaudi: 35000, diploma: 1800 },
+    'الإرشاد النفسي': { saudi: 5000, nonSaudi: 40000, diploma: 2300 }
 };
 
 function calculateFees(preferences) {
@@ -73,7 +94,11 @@ function calculateFees(preferences) {
     AppState.formData.payment.totalAmount = totalFees;
     AppState.formData.payment.orderNumber = document.getElementById('orderNumber').textContent;
     DataStore.save('payment_data', AppState.formData.payment);
-    if (typeof CloudDB !== 'undefined') CloudDB.save('payment_data', AppState.formData.payment).catch(() => {});
+    if (typeof CloudDB !== 'undefined') {
+        try { CloudDB.save('payment_data', AppState.formData.payment); } catch (e) {
+            console.warn('[Fees] Cloud save failed:', e.message);
+        }
+    }
 }
 
 function proceedToPayment() {

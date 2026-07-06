@@ -293,9 +293,12 @@ function submitPreferences() {
         return;
     }
     
-    // Store preferences with history
     DataStore.save('preferences', AppState.formData.preferences);
-    if (typeof CloudDB !== 'undefined') CloudDB.save('preferences', AppState.formData.preferences).catch(() => {});
+    if (typeof CloudDB !== 'undefined') {
+        try { await CloudDB.save('preferences', AppState.formData.preferences); } catch (e) {
+            console.warn('[Tracks] Cloud save failed:', e.message);
+        }
+    }
     
     // Show confirmation
     const preferencesList = AppState.formData.preferences.map((pref, index) => 

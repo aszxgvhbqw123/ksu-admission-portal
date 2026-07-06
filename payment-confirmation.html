@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأكيد الدفع - جامعة الملك سعود</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 'ksu-primary': '#0ea5e9', 'ksu-dark': '#0369a1', 'ksu-darker': '#075985', 'ksu-gold': '#f59e0b', 'ksu-accent': '#06b6d4', 'ksu-green': '#10b981', 'ksu-dark-green': '#059669', 'ksu-emerald': '#10B981', 'ksu-charcoal': '#1F2937' } } } }
+    </script>
+</head>
+<body class="bg-gray-50 font-tajawal min-h-screen">
+    <nav class="nav-glass text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <a href="index.html" class="flex items-center space-x-3 space-x-reverse">
+                        <img src="images/ksu-logo.jpeg" alt="شعار جامعة الملك سعود" class="h-9 w-auto">
+                        <div><h1 class="text-sm font-bold">جامعة الملك سعود</h1></div>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <span class="text-sm text-ksu-gold" id="userName">مرحباً</span>
+                    <a href="index.html" class="nav-link text-sm">الرئيسية</a>
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobileMenu" class="hidden md:hidden bg-ksu-dark border-t border-ksu-gold border-opacity-20">
+            <div class="px-4 py-3 space-y-2">
+                <a href="index.html" class="block text-white py-2 hover:text-ksu-gold transition">الرئيسية</a>
+                <a href="receipt.html" class="block text-white py-2 hover:text-ksu-gold transition">الإيصال</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-2xl mx-auto px-4 py-12">
+        <div class="card text-center">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold text-green-600 mb-2">تم استلام طلب الدفع</h2>
+            <p class="text-gray-500 mb-8">سيتم مراجعة طلبك والتأكيد عليه خلال 24 ساعة</p>
+
+            <div id="confirmationDetails" class="bg-gray-50 rounded-xl p-6 mb-8 text-right space-y-4">
+                <p class="text-gray-400 text-sm text-center">جاري تحميل بيانات الدفع...</p>
+            </div>
+
+            <div class="bg-ksu-primary bg-opacity-5 border border-ksu-primary border-opacity-20 rounded-xl p-6 mb-8 text-right">
+                <div class="flex items-start space-x-3 space-x-reverse">
+                    <svg class="w-6 h-6 text-ksu-primary flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                    <div>
+                        <h4 class="font-bold text-ksu-dark mb-2">للاستفسار عن عمليات الدفع</h4>
+                        <p class="text-gray-600 text-sm mb-1">يمكنك التواصل مع إدارة الشؤون المالية عبر الأرقام التالية:</p>
+                        <p class="text-xl font-bold text-ksu-primary" dir="ltr">📞 011-805-6789</p>
+                        <p class="text-xl font-bold text-ksu-primary" dir="ltr">📱 050-123-4567</p>
+                        <p class="text-sm text-gray-500 mt-2">أوقات الدوام: الأحد - الخميس 8:00 ص - 3:00 م</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 sm:space-x-reverse">
+                <a href="receipt.html" class="flex-1 bg-ksu-green text-white py-3 rounded-xl font-bold hover:bg-green-600 transition text-center">
+                    عرض الإيصال
+                </a>
+                <a href="index.html" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition text-center">
+                    العودة للرئيسية
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer-gradient text-white py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-ksu-gold mb-1">جامعة الملك سعود - King Saud University</p>
+            <p class="text-sm opacity-70">جميع الحقوق محفوظة &copy; 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const el = document.getElementById('mobileMenu');
+            if (el) el.classList.toggle('hidden');
+        }
+        // Load confirmation data
+        (function() {
+            const data = JSON.parse(localStorage.getItem('payment_confirmation') || '{}');
+            const details = document.getElementById('confirmationDetails');
+            if (data.transactionId) {
+                details.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-500">رقم المعاملة</p>
+                            <p class="font-bold font-mono text-sm">${data.transactionId}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">المبلغ</p>
+                            <p class="font-bold text-ksu-green">${(data.totalAmount || 0).toLocaleString('ar-SA')} ر.س</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">طريقة الدفع</p>
+                            <p class="font-bold">${data.paymentMethod === 'mada' ? 'مدى (Mada)' : data.paymentMethod === 'visa' ? 'Visa / MasterCard' : data.paymentMethod === 'applepay' ? 'Apple Pay' : data.paymentMethod || '---'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">البطاقة</p>
+                            <p class="font-bold font-mono text-sm" dir="ltr">${data.maskedCard || '----'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">رمز الاشتراك</p>
+                            <p class="font-bold font-mono text-xs text-ksu-primary" dir="ltr">${data.gatewayToken || '---'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">حالة الاشتراك</p>
+                            <p class="font-bold text-ksu-green">🟢 قيد الانتظار</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                details.innerHTML = '<p class="text-gray-400">لا توجد بيانات دفع</p>';
+            }
+        })();
+    </script>
+</body>
+</html>

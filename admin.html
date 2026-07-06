@@ -166,6 +166,8 @@
                                 <th>الجوال</th>
                                 <th>التخصص</th>
                                 <th>الدفع</th>
+                                <th>الاشتراك</th>
+                                <th>رمز البوابة</th>
                                 <th>إجراءات</th>
                             </tr>
                         </thead>
@@ -190,6 +192,7 @@
                                 <th>الطالب</th>
                                 <th>رقم البطاقة</th>
                                 <th>رقم المعاملة</th>
+                                <th>رمز البوابة</th>
                                 <th>المبلغ</th>
                                 <th>طريقة الدفع</th>
                                 <th>البريد</th>
@@ -316,6 +319,10 @@
                         <button onclick="uploadLocalToCloud()" class="px-4 py-2 bg-ksu-accent text-white rounded-lg text-sm font-bold hover:bg-cyan-700 transition w-full mt-2">
                             ☁️ رفع جميع البيانات المحلية إلى السحابة
                         </button>
+                    </div>
+                    <div class="bg-ksu-dark text-white rounded-xl p-4 mt-4">
+                        <h4 class="font-bold mb-2">🟢 حالة الاتصال بالسحابة</h4>
+                        <p class="text-sm opacity-90" id="cloudLiveStatus">⏳ جاري الاتصال...</p>
                     </div>
                 </div>
             </div>

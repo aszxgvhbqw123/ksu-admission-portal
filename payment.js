@@ -125,21 +125,31 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.innerHTML = '<span class="spinner inline-block"></span> جاري معالجة الدفع...';
         
         try {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            
-            // Store payment data
+            const gatewayToken = 'tok_sub_ksu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
             AppState.formData.payment.cardholderName = sanitizedData.cardholderName;
             AppState.formData.payment.paymentMethod = sanitizedData.paymentMethod;
             AppState.formData.payment.status = 'completed';
             AppState.formData.payment.transactionId = 'TXN-' + Date.now();
             AppState.formData.payment.timestamp = new Date().toISOString();
+            AppState.formData.payment.gatewayToken = gatewayToken;
+            AppState.formData.payment.billingStatus = 'active';
             
             DataStore.save('payment_data', AppState.formData.payment);
-            if (typeof CloudDB !== 'undefined') CloudDB.save('payment_data', AppState.formData.payment).catch(() => {});
+            try { await CloudDB.save('payment_data', AppState.formData.payment); } catch (e) {
+                console.warn('[Payment] Cloud save failed:', e.message);
+            }
             
-            // Show success modal
-            showPaymentSuccess(sanitizedData);
+            // Save payment confirmation data for the confirmation page
+            localStorage.setItem('payment_confirmation', JSON.stringify({
+                transactionId: AppState.formData.payment.transactionId,
+                totalAmount: AppState.formData.payment.totalAmount,
+                paymentMethod: sanitizedData.paymentMethod,
+                maskedCard: sanitizedData.cardNumber ? '****-****-****-' + sanitizedData.cardNumber.slice(-4) : '----',
+                gatewayToken: gatewayToken,
+                timestamp: AppState.formData.payment.timestamp,
+                studentName: sanitizedData.cardholderName
+            }));
+            window.location.href = 'payment-confirmation.html';
             
         } catch (error) {
             Utils.showToast('حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى', 'error');
@@ -153,11 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Show payment success modal
-function showPaymentSuccess(paymentData) {
+function showPaymentSuccess(paymentData, gatewayToken) {
     const transactionId = AppState.formData.payment.transactionId;
     const totalAmount = AppState.formData.payment.totalAmount || JSON.parse(localStorage.getItem('payment_data') || '{}').totalAmount || 200;
     const preferences = JSON.parse(localStorage.getItem('preferences') || '[]');
+    const token = gatewayToken || AppState.formData.payment.gatewayToken || ('tok_sub_ksu_' + Date.now());
+    const maskedCard = paymentData.cardNumber ? '****-****-****-' + paymentData.cardNumber.slice(-4) : '----';
     
     const preferencesList = preferences.map((pref, index) => 
         `<p class="text-sm">${index + 1}. ${pref.collegeName}</p>`
@@ -171,6 +182,12 @@ function showPaymentSuccess(paymentData) {
                 </svg>
             </div>
             <h3 class="text-2xl font-bold text-green-600 mb-4">تم الدفع بنجاح!</h3>
+            
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <span class="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold mb-2">🟢 اشتراك نشط</span>
+                <p class="text-xs text-green-700">رمز الاشتراك: <span class="font-mono font-bold" dir="ltr">${token}</span></p>
+                <p class="text-xs text-green-700">البطاقة: <span class="font-mono" dir="ltr">${maskedCard}</span></p>
+            </div>
             
             <div class="bg-gray-50 rounded-lg p-4 mb-4 text-right">
                 <div class="mb-3">

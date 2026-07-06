@@ -127,19 +127,16 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.innerHTML = '<span class="spinner inline-block"></span> جاري التسجيل...';
 
         try {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Store user data with history
+            // Save locally first
             DataStore.save('user_data', sanitizedData);
             
-            // Try cloud sync and show result
+            // Cloud save via API
             let cloudMsg = '';
             try {
                 const saved = await CloudDB.save('user_data', sanitizedData);
-                if (saved) {
-                    cloudMsg = '<p class="text-ksu-green text-sm mt-2">☁️ تم الحفظ في السحابة بنجاح</p>';
-                }
+                cloudMsg = saved
+                    ? '<p class="text-ksu-green text-sm mt-2">☁️ تم الحفظ في السحابة بنجاح</p>'
+                    : '<p class="text-yellow-500 text-sm mt-2">☁️ سيتم الرفع للسحابة تلقائياً لاحقاً</p>';
             } catch (e) {
                 cloudMsg = '<p class="text-yellow-500 text-sm mt-2">☁️ سيتم الرفع للسحابة تلقائياً لاحقاً</p>';
             }

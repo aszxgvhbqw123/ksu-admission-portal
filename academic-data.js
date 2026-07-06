@@ -99,10 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
             eligibility: eligibility
         };
 
-        // Store academic data
         AppState.formData.academic = sanitizedData;
         DataStore.save('academic_data', sanitizedData);
-        if (typeof CloudDB !== 'undefined') CloudDB.save('academic_data', sanitizedData).catch(() => {});
+        if (typeof CloudDB !== 'undefined') {
+            try { await CloudDB.save('academic_data', sanitizedData); } catch (e) {
+                console.warn('[Academic] Cloud save failed:', e.message);
+            }
+        }
 
         // Show success message with eligibility info
         let eligibilityMessage = '';

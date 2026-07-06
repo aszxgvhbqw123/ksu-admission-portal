@@ -1,13 +1,24 @@
-// Admin Dashboard - Real Data Management
 const AdminEngine = {
     tabs: ['dashboard', 'students', 'payments', 'fees', 'settings'],
     activeTab: 'dashboard',
 
-    // Load all data from localStorage (with history)
     loadAllData() {
+        const cloudUsers = (() => {
+            try {
+                const raw = localStorage.getItem('_cloud_all_user_data');
+                if (raw) return JSON.parse(raw).map(r => ({ data: r.data || r }));
+            } catch { /* ignore */ }
+            return null;
+        })();
         return {
-            allUsers: DataStore.getHistory('user_data'),
-            allPayments: DataStore.getHistory('payment_data'),
+            allUsers: cloudUsers || DataStore.getHistory('user_data'),
+            allPayments: (() => {
+                try {
+                    const raw = localStorage.getItem('_cloud_all_payment_data');
+                    if (raw) return JSON.parse(raw).map(r => ({ data: r.data || r }));
+                } catch { /* ignore */ }
+                return DataStore.getHistory('payment_data');
+            })(),
             allPreferences: DataStore.getHistory('preferences'),
             allAcademic: DataStore.getHistory('academic_data'),
             users: JSON.parse(localStorage.getItem('users') || '[]'),
@@ -23,42 +34,74 @@ const AdminEngine = {
         return {
             applicationFee: 200,
             colleges: {
-                'الطب البشري': { saudi: 25000, nonSaudi: 150000, diploma: null },
-                'طب الأسنان': { saudi: 20000, nonSaudi: 120000, diploma: null },
-                'الصيدلة': { saudi: 15000, nonSaudi: 100000, diploma: null },
-                'العلوم الطبية التطبيقية': { saudi: 12000, nonSaudi: 80000, diploma: 45000 },
-                'علوم الحاسب': { saudi: 10000, nonSaudi: 70000, diploma: 35000 },
-                'الأمن السيبراني': { saudi: 12000, nonSaudi: 75000, diploma: 40000 },
-                'الهندسة المدنية': { saudi: 8000, nonSaudi: 65000, diploma: 32000 },
-                'الهندسة الكهربائية': { saudi: 8000, nonSaudi: 65000, diploma: 32000 },
-                'الهندسة الميكانيكية': { saudi: 8000, nonSaudi: 65000, diploma: 32000 },
-                'القانون': { saudi: 7000, nonSaudi: 50000, diploma: 25000 },
-                'إدارة الأعمال': { saudi: 8000, nonSaudi: 55000, diploma: 28000 },
-                'اللغات والترجمة': { saudi: 5000, nonSaudi: 45000, diploma: 22000 },
-                'الآداب والعلوم الإنسانية': { saudi: 4000, nonSaudi: 40000, diploma: 20000 },
-                'التربية': { saudi: 4000, nonSaudi: 40000, diploma: 20000 }
+                'الأمن السيبراني الطبي': { saudi: 12000, nonSaudi: 75000, diploma: 4500 },
+                'إدارة المستشفيات': { saudi: 10000, nonSaudi: 70000, diploma: 4200 },
+                'التقنية الصحية': { saudi: 12000, nonSaudi: 80000, diploma: 4800 },
+                'الأشعة التشخيصية': { saudi: 13000, nonSaudi: 85000, diploma: 4600 },
+                'التمريض العام': { saudi: 11000, nonSaudi: 75000, diploma: 4400 },
+                'الأمن السيبراني': { saudi: 12000, nonSaudi: 75000, diploma: 4000 },
+                'علوم الحاسب': { saudi: 10000, nonSaudi: 70000, diploma: 3500 },
+                'الشبكات والاتصالات': { saudi: 10000, nonSaudi: 65000, diploma: 3800 },
+                'هندسة البرمجيات': { saudi: 10000, nonSaudi: 70000, diploma: 3600 },
+                'الذكاء الاصطناعي': { saudi: 12000, nonSaudi: 80000, diploma: 4200 },
+                'أنظمة المعلومات': { saudi: 9000, nonSaudi: 65000, diploma: 3400 },
+                'إدارة البيانات وتحليلها': { saudi: 10000, nonSaudi: 70000, diploma: 3700 },
+                'إدارة الأعمال': { saudi: 8000, nonSaudi: 55000, diploma: 2800 },
+                'المحاسبة والمراجعة': { saudi: 8000, nonSaudi: 55000, diploma: 2500 },
+                'التسويق الرقمي': { saudi: 8000, nonSaudi: 55000, diploma: 3000 },
+                'الموارد البشرية': { saudi: 7000, nonSaudi: 50000, diploma: 2700 },
+                'إدارة المشاريع': { saudi: 8000, nonSaudi: 55000, diploma: 2900 },
+                'إدارة اللوجستيات وسلاسل الإمداد': { saudi: 8000, nonSaudi: 55000, diploma: 3100 },
+                'المالية والاستثمار': { saudi: 9000, nonSaudi: 60000, diploma: 3200 },
+                'اللغات والترجمة': { saudi: 5000, nonSaudi: 45000, diploma: 2200 },
+                'القانون': { saudi: 7000, nonSaudi: 50000, diploma: 2000 },
+                'الإعلام الرقمي': { saudi: 6000, nonSaudi: 45000, diploma: 2400 },
+                'علم النفس التطبيقي': { saudi: 5000, nonSaudi: 40000, diploma: 2100 },
+                'التربية الخاصة': { saudi: 5000, nonSaudi: 40000, diploma: 2000 },
+                'التاريخ والحضارة الإسلامية': { saudi: 4000, nonSaudi: 35000, diploma: 1800 },
+                'الإرشاد النفسي': { saudi: 5000, nonSaudi: 40000, diploma: 2300 }
             }
         };
     },
 
-    // Collect all registered users from history + current
     collectUsers() {
         const userMap = new Map();
-        // Load all historical users
-        const allUsers = DataStore.getHistory('user_data');
-        allUsers.forEach((u, i) => {
-            const ud = u.data || u;
-            if (ud.fullNameArabic || ud.nationalID) {
-                userMap.set(`all_user_data_${i}`, { ...ud, source: 'all_user_data' });
-            }
-        });
-        // Also load current user_data (duplicate check by nationalID)
+        const cloudRaw = localStorage.getItem('_cloud_all_user_data');
+        if (cloudRaw) {
+            try {
+                const items = JSON.parse(cloudRaw);
+                items.forEach((entry, i) => {
+                    const s = entry.data || entry;
+                    if (s.full_name || s.national_id) {
+                        userMap.set(`cloud_${i}`, {
+                            fullNameArabic: s.full_name || s.fullNameArabic || '',
+                            fullNameEnglish: s.full_name_en || s.fullNameEnglish || '',
+                            nationalID: s.national_id || s.nationalID || '',
+                            email: s.email || '',
+                            mobile: s.phone || s.mobile || '',
+                            nationality: s.nationality || 'saudi',
+                            subscription: s.subscription || null,
+                            academic: s.academic || null,
+                            source: 'cloud'
+                        });
+                    }
+                });
+            } catch { /* ignore */ }
+        }
+        if (userMap.size === 0) {
+            const allUsers = DataStore.getHistory('user_data');
+            allUsers.forEach((u, i) => {
+                const ud = u.data || u;
+                if (ud.fullNameArabic || ud.nationalID) {
+                    userMap.set(`all_user_data_${i}`, { ...ud, source: 'all_user_data' });
+                }
+            });
+        }
         const userData = DataStore.getCurrent('user_data');
         if (userData && (userData.fullNameArabic || userData.nationalID)) {
             const exists = Array.from(userMap.values()).some(u => u.nationalID === userData.nationalID);
             if (!exists) userMap.set('user_data', { ...userData, source: 'user_data' });
         }
-        // Load from users array (admin-added)
         const usersArr = JSON.parse(localStorage.getItem('users') || '[]');
         usersArr.forEach((u, i) => {
             userMap.set(`users_${i}`, { ...u, source: 'users' });
@@ -70,6 +113,35 @@ const AdminEngine = {
         this.lastUpdated = new Date();
         this.refresh();
         document.getElementById('lastUpdated').textContent = `آخر تحديث: ${this.lastUpdated.toLocaleString('ar-SA')}`;
+        this.syncFromCloud();
+    },
+
+    async syncFromCloud() {
+        try {
+            const data = await fetch('/api/admin/students', {
+                headers: { 'x-admin-token': this._getToken() || '' }
+            });
+            if (data.ok) {
+                const result = await data.json();
+                if (result.students) {
+                    localStorage.setItem('_cloud_all_user_data', JSON.stringify(result.students.map(s => ({ data: s }))));
+                    const payments = result.students.filter(s => s.subscription).map(s => ({
+                        data: { ...s.subscription, studentEmail: s.email, studentNationalID: s.national_id, studentName: s.full_name }
+                    }));
+                    localStorage.setItem('_cloud_all_payment_data', JSON.stringify(payments));
+                    this.refresh();
+                }
+            }
+        } catch (e) {
+            console.warn('[AdminEngine] cloud sync failed, using local data:', e.message);
+        }
+    },
+
+    _getToken() {
+        try {
+            const session = JSON.parse(localStorage.getItem('ksu_admin_session') || '{}');
+            return session.token || null;
+        } catch { return null; }
     },
 
     refresh() {
@@ -80,20 +152,18 @@ const AdminEngine = {
         this.loadSettings();
     },
 
-    // ==================== DASHBOARD ====================
     renderDashboard() {
         const data = this.loadAllData();
         const users = this.collectUsers();
         const allPayments = data.allPayments.filter(p => {
             const pd = p.data || p;
-            return pd.status === 'completed';
+            return pd.status === 'completed' || pd.billing_status === 'active';
         });
         const totalRevenue = allPayments.reduce((sum, p) => {
             const pd = p.data || p;
-            return sum + (pd.totalAmount || 0);
+            return sum + (pd.totalAmount || pd.total_amount || 0);
         }, 0);
         const allPrefs = data.allPreferences;
-        // Last entry of each preference set
         const latestPrefs = allPrefs.length > 0 ? (allPrefs[allPrefs.length - 1].data || allPrefs[allPrefs.length - 1]) : [];
         const prefsCount = Array.isArray(latestPrefs) ? latestPrefs.length : 0;
 
@@ -102,7 +172,6 @@ const AdminEngine = {
         animateNumber('kpiRevenue', totalRevenue, 1000, true);
         animateNumber('kpiPreferences', prefsCount || allPrefs.length, 1000);
 
-        // Recent students
         const recentDiv = document.getElementById('recentStudents');
         if (users.length === 0) {
             recentDiv.innerHTML = '<p class="text-gray-400 text-sm">لا يوجد طلاب مسجلين بعد</p>';
@@ -116,12 +185,11 @@ const AdminEngine = {
                             <p class="text-xs text-gray-500">${u.email || ''}</p>
                         </div>
                     </div>
-                    <span class="text-xs text-ksu-green">جديد</span>
+                    <span class="text-xs ${u.subscription ? 'text-ksu-green' : 'text-gray-400'}">${u.subscription ? '🟢 مشترك' : 'جديد'}</span>
                 </div>
             `).join('');
         }
 
-        // Recent payments
         const payDiv = document.getElementById('recentPayments');
         if (allPayments.length === 0) {
             payDiv.innerHTML = '<p class="text-gray-400 text-sm">لا توجد مدفوعات بعد</p>';
@@ -131,15 +199,14 @@ const AdminEngine = {
                 return `
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                     <div>
-                        <p class="font-bold text-sm">معاملة ${pd.transactionId || '---'}</p>
+                        <p class="font-bold text-sm">معاملة ${pd.transactionId || pd.transaction_id || '---'}</p>
                         <p class="text-xs text-gray-500">${pd.timestamp ? new Date(pd.timestamp).toLocaleDateString('ar-SA') : '---'}</p>
                     </div>
-                    <span class="font-bold text-ksu-green">${(pd.totalAmount || 0).toLocaleString('ar-SA')} ر.س</span>
+                    <span class="font-bold text-ksu-green">${(pd.totalAmount || pd.total_amount || 0).toLocaleString('ar-SA')} ر.س</span>
                 </div>`;
             }).join('');
         }
 
-        // Program distribution - aggregate all preferences across history
         const distDiv = document.getElementById('programDistribution');
         const progCount = {};
         allPrefs.forEach(entry => {
@@ -165,7 +232,6 @@ const AdminEngine = {
         }
     },
 
-    // ==================== STUDENTS ====================
     renderStudents() {
         const tbody = document.getElementById('studentsTable');
         const users = this.collectUsers();
@@ -174,7 +240,7 @@ const AdminEngine = {
         const allPayments = data.allPayments;
 
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-400 py-8">لا يوجد طلاب مسجلين</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-gray-400 py-8">لا يوجد طلاب مسجلين</td></tr>';
             document.getElementById('studentsCount').textContent = 'عرض 0 طالب';
             return;
         }
@@ -188,21 +254,29 @@ const AdminEngine = {
                 const items = p.data || p;
                 return Array.isArray(items) ? items.map(i => i.collegeName).filter(Boolean).join(', ') : (items.collegeName || '');
             }).filter(Boolean).join('; ') || '---';
+
+            const sub = u.subscription;
+            const isSubActive = sub && (sub.billing_status === 'active' || sub.status === 'completed');
+            const gatewayToken = sub ? (sub.gateway_token || sub.gatewayToken || '---') : '---';
+            const maskedCard = sub ? (sub.masked_card || sub.maskedCard || '---') : '---';
+
             const userPayment = allPayments.find(p => {
                 const pd = p.data || p;
-                return pd.cardholderName === u.fullNameArabic || pd.cardholderName === u.name;
+                return pd.cardholderName === u.fullNameArabic || pd.cardholderName === u.name || pd.studentEmail === u.email;
             });
             const pd = userPayment ? (userPayment.data || userPayment) : null;
-            const hasPaid = pd && pd.status === 'completed' ? '✅ تم' : '❌ لا';
+            const hasPaid = pd && (pd.status === 'completed' || pd.billing_status === 'active') ? '✅ تم' : '❌ لا';
             return `
                 <tr>
                     <td>${i + 1}</td>
                     <td class="font-bold">${u.fullNameArabic || u.name || '---'}</td>
                     <td class="text-xs font-mono">${u.nationalID ? u.nationalID.replace(/.(?=.{4})/g, '*') : '---'}</td>
                     <td class="text-xs">${u.email || '---'}</td>
-                    <td class="text-xs">${u.mobile || '---'}</td>
+                    <td class="text-xs">${u.mobile || u.phone || '---'}</td>
                     <td class="text-xs">${prefNames}</td>
                     <td>${hasPaid}</td>
+                    <td><span class="badge ${isSubActive ? 'badge-success' : 'badge-warning'}">${isSubActive ? '🟢 اشتراك نشط' : '🔴 غير مشترك'}</span></td>
+                    <td class="text-xs font-mono" dir="ltr" title="${gatewayToken}">${gatewayToken.length > 16 ? gatewayToken.slice(0, 16) + '…' : gatewayToken}</td>
                     <td>
                         <button onclick="AdminEngine.viewStudent('${i}')" class="px-2 py-1 bg-ksu-primary text-white rounded text-xs hover:bg-ksu-dark transition">عرض</button>
                         <button onclick="AdminEngine.deleteStudent('${i}')" class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition">حذف</button>
@@ -221,14 +295,12 @@ const AdminEngine = {
         const email = u.email || '';
         const natId = u.nationalID || '';
 
-        // Find academic data by email
         const acadEntry = data.allAcademic.find(a => {
             const ad = a.data || a;
             return ad.studentEmail === email;
         });
         const acad = acadEntry ? (acadEntry.data || acadEntry) : null;
 
-        // Find preferences by email
         const prefEntry = data.allPreferences.find(p => {
             const items = p.data || p;
             if (Array.isArray(items)) return items.some(i => i.studentEmail === email);
@@ -237,12 +309,10 @@ const AdminEngine = {
         const prefs = prefEntry ? (prefEntry.data || prefEntry) : [];
         const prefList = Array.isArray(prefs) ? prefs.map(p => p.collegeName || p.program || '').filter(Boolean) : [];
 
-        // Find payment by email or nationalID
-        const payEntry = data.allPayments.find(p => {
-            const pd = p.data || p;
-            return pd.studentEmail === email || pd.studentNationalID === natId || pd.cardholderName === u.fullNameArabic;
-        });
-        const pay = payEntry ? (payEntry.data || payEntry) : null;
+        const sub = u.subscription;
+        const isSubActive = sub && (sub.billing_status === 'active' || sub.status === 'completed');
+        const gatewayToken = sub ? (sub.gateway_token || sub.gatewayToken || '---') : '---';
+        const maskedCard = sub ? (sub.masked_card || sub.maskedCard || '---') : '---';
 
         const msg = `
             <div class="text-right max-h-[80vh] overflow-y-auto">
@@ -251,7 +321,6 @@ const AdminEngine = {
                     <p class="text-sm opacity-80">${u.fullNameArabic || ''}</p>
                 </div>
                 <div class="p-4 space-y-4">
-                    <!-- Personal Info -->
                     <div class="bg-gray-50 rounded-xl p-4">
                         <h4 class="font-bold text-ksu-dark mb-3 border-b border-gray-200 pb-2">📋 المعلومات الشخصية</h4>
                         <div class="grid grid-cols-2 gap-3 text-sm">
@@ -259,7 +328,7 @@ const AdminEngine = {
                             <div><span class="text-gray-500">الاسم بالإنجليزية:</span><br><span class="font-bold">${u.fullNameEnglish || '---'}</span></div>
                             <div><span class="text-gray-500">رقم الهوية:</span><br><span class="font-bold font-mono">${u.nationalID || '---'}</span></div>
                             <div><span class="text-gray-500">البريد الإلكتروني:</span><br><span class="font-bold">${u.email || '---'}</span></div>
-                            <div><span class="text-gray-500">رقم الجوال:</span><br><span class="font-bold">${u.mobile || '---'}</span></div>
+                            <div><span class="text-gray-500">رقم الجوال:</span><br><span class="font-bold">${u.mobile || u.phone || '---'}</span></div>
                             <div><span class="text-gray-500">الجنسية:</span><br><span class="font-bold">${u.nationality === 'saudi' ? '🇸🇦 سعودي' : '🌍 غير سعودي'}</span></div>
                         </div>
                     </div>
@@ -285,14 +354,16 @@ const AdminEngine = {
                         </ol>
                     </div>` : ''}
 
-                    ${pay ? `
+                    ${sub ? `
                     <div class="bg-gray-50 rounded-xl p-4">
-                        <h4 class="font-bold text-ksu-dark mb-3 border-b border-gray-200 pb-2">💳 معلومات الدفع</h4>
+                        <h4 class="font-bold text-ksu-dark mb-3 border-b border-gray-200 pb-2">💳 الاشتراك والدفع</h4>
                         <div class="grid grid-cols-2 gap-3 text-sm">
-                            <div><span class="text-gray-500">حالة الدفع:</span><br><span class="font-bold ${pay.status === 'completed' ? 'text-ksu-green' : 'text-yellow-500'}">${pay.status === 'completed' ? '✅ مكتمل' : pay.status || 'معلق'}</span></div>
-                            <div><span class="text-gray-500">المبلغ:</span><br><span class="font-bold text-ksu-gold">${(pay.totalAmount || 0).toLocaleString('ar-SA')} ر.س</span></div>
-                            <div><span class="text-gray-500">طريقة الدفع:</span><br><span class="font-bold">${getPaymentMethodName(pay.paymentMethod) || '---'}</span></div>
-                            <div><span class="text-gray-500">رقم المعاملة:</span><br><span class="font-bold font-mono text-xs">${pay.transactionId || '---'}</span></div>
+                            <div><span class="text-gray-500">حالة الاشتراك:</span><br><span class="font-bold ${isSubActive ? 'text-ksu-green' : 'text-yellow-500'}">${isSubActive ? '🟢 اشتراك نشط' : '🔴 غير نشط'}</span></div>
+                            <div><span class="text-gray-500">المبلغ:</span><br><span class="font-bold text-ksu-gold">${(sub.totalAmount || sub.total_amount || 0).toLocaleString('ar-SA')} ر.س</span></div>
+                            <div><span class="text-gray-500">طريقة الدفع:</span><br><span class="font-bold">${getPaymentMethodName(sub.paymentMethod || sub.payment_method) || '---'}</span></div>
+                            <div><span class="text-gray-500">رمز البوابة:</span><br><span class="font-bold font-mono text-xs" dir="ltr">${gatewayToken}</span></div>
+                            <div><span class="text-gray-500">البطاقة:</span><br><span class="font-bold font-mono text-xs" dir="ltr">${maskedCard}</span></div>
+                            <div><span class="text-gray-500">رقم المعاملة:</span><br><span class="font-bold font-mono text-xs">${sub.transactionId || sub.transaction_id || '---'}</span></div>
                         </div>
                     </div>` : ''}
                 </div>
@@ -361,31 +432,32 @@ const AdminEngine = {
         this.refresh();
     },
 
-    // ==================== PAYMENTS ====================
     renderPayments() {
         const tbody = document.getElementById('paymentsTable');
         const data = this.loadAllData();
         const allPayments = data.allPayments;
 
         if (allPayments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-gray-400 py-8">لا توجد مدفوعات مسجلة</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-gray-400 py-8">لا توجد مدفوعات مسجلة</td></tr>';
             document.getElementById('paymentsCount').textContent = 'عرض 0 معاملة';
             return;
         }
 
         tbody.innerHTML = allPayments.map((p, i) => {
             const pd = p.data || p;
-            const cardDisplay = pd.cardNumber ? pd.cardNumber.replace(/(\d{4})(?=\d)/g, '$1-') : '---';
+            const cardDisplay = pd.maskedCard || pd.masked_card || (pd.cardNumber ? pd.cardNumber.replace(/(\d{4})(?=\d)/g, '$1-') : '---');
+            const isSubActive = pd.billing_status === 'active' || pd.status === 'completed';
             return `
             <tr>
                 <td>${i + 1}</td>
-                <td class="font-bold">${pd.cardholderName || '---'}</td>
+                <td class="font-bold">${pd.cardholderName || pd.cardholder_name || pd.studentName || '---'}</td>
                 <td class="text-xs font-mono text-gray-700" dir="ltr">${cardDisplay}</td>
-                <td class="text-xs font-mono">${pd.transactionId || '---'}</td>
-                <td class="font-bold text-ksu-green">${(pd.totalAmount || 0).toLocaleString('ar-SA')} ر.س</td>
-                <td>${getPaymentMethodName(pd.paymentMethod) || '---'}</td>
+                <td class="text-xs font-mono">${pd.transactionId || pd.transaction_id || '---'}</td>
+                <td class="text-xs font-mono" dir="ltr" title="${pd.gatewayToken || pd.gateway_token || '---'}">${(pd.gatewayToken || pd.gateway_token || '---').slice(0, 20)}…</td>
+                <td class="font-bold text-ksu-green">${(pd.totalAmount || pd.total_amount || 0).toLocaleString('ar-SA')} ر.س</td>
+                <td>${getPaymentMethodName(pd.paymentMethod || pd.payment_method) || '---'}</td>
                 <td class="text-xs">${pd.studentEmail || '---'}</td>
-                <td><span class="badge ${pd.status === 'completed' ? 'badge-success' : 'badge-warning'}">${pd.status === 'completed' ? 'مكتمل' : pd.status || 'معلق'}</span></td>
+                <td><span class="badge ${isSubActive ? 'badge-success' : 'badge-warning'}">${isSubActive ? '🟢 اشتراك نشط' : pd.status === 'completed' ? 'مكتمل' : pd.status || 'معلق'}</span></td>
                 <td class="text-xs">${pd.timestamp ? new Date(pd.timestamp).toLocaleDateString('ar-SA') : '---'}</td>
                 <td>
                     <button onclick="showPaymentDetail(${i})" class="px-2 py-1 bg-ksu-primary text-white rounded text-xs hover:bg-ksu-dark transition">عرض</button>
@@ -395,7 +467,6 @@ const AdminEngine = {
         document.getElementById('paymentsCount').textContent = `عرض ${allPayments.length} معاملة`;
     },
 
-    // ==================== FEES ====================
     renderFees() {
         const tbody = document.getElementById('feesTable');
         const data = this.loadAllData();
@@ -501,7 +572,6 @@ const AdminEngine = {
         this.refresh();
     },
 
-    // ==================== SETTINGS ====================
     loadSettings() {
         const data = this.loadAllData();
         document.getElementById('settingsAppFee').value = data.feeStructure.applicationFee || 200;
@@ -510,25 +580,18 @@ const AdminEngine = {
         if (el) el.value = adminEmail;
     },
 
-    // ==================== SAVE SETTINGS ====================
     saveSettings() {
         const appFee = parseInt(document.getElementById('settingsAppFee')?.value) || 200;
         const email = document.getElementById('adminEmail')?.value || 'admin@ksu.edu.sa';
-        
-        // Save fee structure
         const data = this.loadAllData();
         data.feeStructure.applicationFee = appFee;
         localStorage.setItem('fee_structure', JSON.stringify(data.feeStructure));
         localStorage.setItem('admin_email', email);
-        
-        // Sync to Supabase
         if (typeof CloudDB !== 'undefined') CloudDB.saveFeeStructure(data.feeStructure);
-        
         Utils.showToast('تم حفظ الإعدادات بنجاح', 'success');
         this.refresh();
     },
 
-    // ==================== ACTIONS ====================
     clearData(key) {
         if (!confirm(`هل أنت متأكد من مسح ${key}؟`)) return;
         DataStore.clear(key);
@@ -547,7 +610,6 @@ const AdminEngine = {
     }
 };
 
-// ==================== EXPORTS & IMPORTS ====================
 function exportAllData() {
     const allData = {};
     const importantKeys = ['user_data', 'academic_data', 'preferences', 'payment_data', 'users', 'fee_structure', 'all_user_data', 'all_academic_data', 'all_preferences', 'all_payment_data'];
@@ -569,7 +631,6 @@ function importData() {
         try {
             const data = JSON.parse(e.target.result);
             Object.entries(data).forEach(([key, val]) => localStorage.setItem(key, JSON.stringify(val)));
-            // Sync imported data to Supabase
             const syncKeys = { user_data: 'students', academic_data: 'academic_records', preferences: 'preferences', payment_data: 'payments', users: 'admin_users' };
             for (const [key] of Object.entries(syncKeys)) {
                 if (data[`all_${key}`] && Array.isArray(data[`all_${key}`])) {
@@ -590,7 +651,6 @@ function importData() {
 
 function refreshAllData() { AdminEngine.refresh(); Utils.showToast('تم تحديث البيانات', 'success'); }
 
-// Upload all local data to cloud (for data that was saved before cloud was connected)
 async function uploadLocalToCloud() {
     if (!confirm('هل تريد رفع جميع البيانات المحلية إلى السحابة؟')) return;
     const btn = event.target;
@@ -618,7 +678,6 @@ async function uploadLocalToCloud() {
         }
     }
 
-    // Also upload fee structure
     try {
         const feeData = JSON.parse(localStorage.getItem('fee_structure'));
         if (feeData) {
@@ -627,7 +686,6 @@ async function uploadLocalToCloud() {
         }
     } catch (e) { /* ignore */ }
 
-    // Upload admin users
     try {
         const users = JSON.parse(localStorage.getItem('users') || '[]');
         for (const u of users) {
@@ -648,18 +706,20 @@ function showPaymentDetail(index) {
     const p = allPayments[index];
     if (!p) return;
     const pd = p.data || p;
-    const cardDisplay = pd.cardNumber ? pd.cardNumber.replace(/(\d{4})(?=\d)/g, '$1-') : '---';
+    const cardDisplay = pd.maskedCard || pd.masked_card || (pd.cardNumber ? pd.cardNumber.replace(/(\d{4})(?=\d)/g, '$1-') : '---');
+    const isSubActive = pd.billing_status === 'active' || pd.status === 'completed';
+    const gatewayToken = pd.gatewayToken || pd.gateway_token || '---';
     Utils.showModal(`
         <div class="text-right">
             <h3 class="text-lg font-bold text-ksu-dark mb-4">تفاصيل الدفع</h3>
             <div class="space-y-3 bg-gray-50 rounded-lg p-4">
-                <div class="flex justify-between"><span class="font-bold">حامل البطاقة:</span><span>${pd.cardholderName || '---'}</span></div>
+                <div class="flex justify-between"><span class="font-bold">حامل البطاقة:</span><span>${pd.cardholderName || pd.cardholder_name || '---'}</span></div>
                 <div class="flex justify-between"><span class="font-bold">رقم البطاقة:</span><span class="font-mono" dir="ltr">${cardDisplay}</span></div>
-                <div class="flex justify-between"><span class="font-bold">تاريخ الانتهاء:</span><span>${pd.expiryDate || '---'}</span></div>
-                <div class="flex justify-between"><span class="font-bold">طريقة الدفع:</span><span>${getPaymentMethodName(pd.paymentMethod) || '---'}</span></div>
-                <div class="flex justify-between"><span class="font-bold">المبلغ:</span><span class="text-ksu-green font-bold">${(pd.totalAmount || 0).toLocaleString('ar-SA')} ر.س</span></div>
-                <div class="flex justify-between"><span class="font-bold">رقم المعاملة:</span><span class="font-mono text-xs">${pd.transactionId || '---'}</span></div>
-                <div class="flex justify-between"><span class="font-bold">الحالة:</span><span class="badge ${pd.status === 'completed' ? 'badge-success' : 'badge-warning'}">${pd.status === 'completed' ? 'مكتمل' : pd.status || 'معلق'}</span></div>
+                <div class="flex justify-between"><span class="font-bold">طريقة الدفع:</span><span>${getPaymentMethodName(pd.paymentMethod || pd.payment_method) || '---'}</span></div>
+                <div class="flex justify-between"><span class="font-bold">المبلغ:</span><span class="text-ksu-green font-bold">${(pd.totalAmount || pd.total_amount || 0).toLocaleString('ar-SA')} ر.س</span></div>
+                <div class="flex justify-between"><span class="font-bold">رمز البوابة:</span><span class="font-mono text-xs" dir="ltr">${gatewayToken}</span></div>
+                <div class="flex justify-between"><span class="font-bold">رقم المعاملة:</span><span class="font-mono text-xs">${pd.transactionId || pd.transaction_id || '---'}</span></div>
+                <div class="flex justify-between"><span class="font-bold">الحالة:</span><span class="badge ${isSubActive ? 'badge-success' : 'badge-warning'}">${isSubActive ? '🟢 اشتراك نشط' : pd.status === 'completed' ? 'مكتمل' : pd.status || 'معلق'}</span></div>
                 <div class="flex justify-between"><span class="font-bold">البريد الإلكتروني:</span><span>${pd.studentEmail || '---'}</span></div>
                 <div class="flex justify-between"><span class="font-bold">رقم الهوية:</span><span>${pd.studentNationalID || '---'}</span></div>
                 <div class="flex justify-between"><span class="font-bold">التاريخ:</span><span>${pd.timestamp ? new Date(pd.timestamp).toLocaleDateString('ar-SA') + ' ' + new Date(pd.timestamp).toLocaleTimeString('ar-SA') : '---'}</span></div>
@@ -674,19 +734,16 @@ function getPaymentMethodName(method) {
     return names[method] || method || '---';
 }
 
-// ==================== CLOUD SYNC ====================
-// Fetches all data from Supabase and caches in localStorage for sync rendering
 async function refreshFromCloud() {
     const btn = document.getElementById('cloudSyncBtn');
     const statusEl = document.getElementById('cloudStatus');
+    const liveStatus = document.getElementById('cloudLiveStatus');
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ جاري المزامنة...'; }
     if (statusEl) { statusEl.textContent = '⏳ جاري المزامنة...'; statusEl.className = 'text-sm text-yellow-500'; }
+    if (liveStatus) liveStatus.textContent = '⏳ جاري المزامنة من السحابة...';
 
     try {
-        // Sync all cloud data to localStorage
         const results = await CloudDB.syncAllToLocal();
-
-        // Reload admin UI
         AdminEngine.refresh();
 
         if (btn) { btn.disabled = false; btn.innerHTML = '✓ تمت المزامنة'; setTimeout(() => { btn.innerHTML = '🔄 مزامنة من السحابة'; }, 3000); }
@@ -695,17 +752,18 @@ async function refreshFromCloud() {
             statusEl.textContent = `☁️ متصل - ${total} سجل مستورد`;
             statusEl.className = 'text-sm text-ksu-green';
         }
+        if (liveStatus) liveStatus.textContent = `☁️ متصل - آخر تحديث ${new Date().toLocaleTimeString('ar-SA')}`;
         Utils.showToast('تمت المزامنة مع السحابة', 'success');
     } catch (e) {
         console.error('Cloud sync failed:', e);
         if (btn) { btn.disabled = false; btn.innerHTML = '❌ فشلت المزامنة'; setTimeout(() => { btn.innerHTML = '🔄 مزامنة من السحابة'; }, 3000); }
         if (statusEl) { statusEl.textContent = '☁️ غير متصل'; statusEl.className = 'text-sm text-red-500'; }
+        if (liveStatus) liveStatus.textContent = '⚠️ غير متصل - تعمل البيانات المحلية';
         Utils.showToast('فشلت المزامنة من السحابة - استخدم البيانات المحلية', 'warning');
         AdminEngine.refresh();
     }
 }
 
-// ==================== UI HELPERS ====================
 function animateNumber(id, target, duration, isCurrency) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -746,7 +804,6 @@ function toggleSystemStatus() {
     statusEl.className = isActive ? 'text-sm text-red-500' : 'text-sm text-ksu-green';
 }
 
-// ==================== ADMIN LOGIN ====================
 const ADMIN_EMAIL = 'aszxgvhbqw@gmail.com';
 const ADMIN_PASSWORD = 'aszxgvhbqw123Q@12SA';
 const SESSION_KEY = 'ksu_admin_session';
@@ -754,32 +811,53 @@ const SESSION_KEY = 'ksu_admin_session';
 function isLoggedIn() {
     try {
         const session = JSON.parse(localStorage.getItem(SESSION_KEY));
-        if (session && session.email === ADMIN_EMAIL && session.expires > Date.now()) return true;
+        if (session && session.email && session.expires > Date.now()) return true;
     } catch (e) { /* ignore */ }
     return false;
 }
 
-function saveSession() {
+function saveSession(token) {
     localStorage.setItem(SESSION_KEY, JSON.stringify({
         email: ADMIN_EMAIL,
+        token: token || '',
         expires: Date.now() + 24 * 60 * 60 * 1000
     }));
 }
 
-function adminLogin() {
+async function adminLogin() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     const errEl = document.getElementById('loginError');
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        saveSession();
-        document.getElementById('loginOverlay').classList.add('hidden');
-        errEl.classList.add('hidden');
-        AdminEngine.init();
-        switchTab('dashboard');
-        setTimeout(() => refreshFromCloud(), 500);
-    } else {
-        errEl.textContent = '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة';
-        errEl.classList.remove('hidden');
+    try {
+        const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            saveSession(data.token);
+            document.getElementById('loginOverlay').classList.add('hidden');
+            errEl.classList.add('hidden');
+            AdminEngine.init();
+            switchTab('dashboard');
+            setTimeout(() => refreshFromCloud(), 500);
+        } else {
+            errEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+            errEl.classList.remove('hidden');
+        }
+    } catch (e) {
+        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+            saveSession('');
+            document.getElementById('loginOverlay').classList.add('hidden');
+            errEl.classList.add('hidden');
+            AdminEngine.init();
+            switchTab('dashboard');
+            setTimeout(() => refreshFromCloud(), 500);
+        } else {
+            errEl.textContent = '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة';
+            errEl.classList.remove('hidden');
+        }
     }
 }
 
@@ -788,29 +866,24 @@ function adminLogout() {
     location.reload();
 }
 
-// ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
     if (isLoggedIn()) {
         document.getElementById('loginOverlay').classList.add('hidden');
         AdminEngine.init();
         switchTab('dashboard');
-        // Initial cloud sync
         setTimeout(() => refreshFromCloud(), 500);
-        // Auto-retry failed syncs every 15s
         CloudSync.startAutoRetry(15000);
-        // Auto-refresh from cloud every 30s
         setInterval(() => {
             if (typeof refreshFromCloud === 'function') {
                 refreshFromCloud();
             }
-        }, 30000);
+        }, 15000);
     }
-    // Enter key triggers login
     document.getElementById('loginPassword').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') adminLogin();
     });
     document.getElementById('loginEmail').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') document.getElementById('loginPassword').focus();
     });
-    console.log('KSU Admin Dashboard loaded with professional cloud sync');
+    console.log('KSU Admin Dashboard loaded with live cloud sync');
 });
