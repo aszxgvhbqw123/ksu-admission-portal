@@ -287,7 +287,7 @@ function removePreference(index) {
 }
 
 // Submit preferences
-function submitPreferences() {
+async function submitPreferences() {
     if (AppState.formData.preferences.length === 0) {
         Utils.showToast('يرجى اختيار تخصص واحد على الأقل', 'warning');
         return;
