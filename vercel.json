@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "framework": null,
   "buildCommand": null,
   "outputDirectory": ".",
   "functions": {
@@ -8,5 +9,6 @@
       "maxDuration": 10
     }
   },
+  "nodeVersion": "18.x",
   "trailingSlash": false
 }
