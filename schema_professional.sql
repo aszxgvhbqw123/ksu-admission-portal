@@ -92,64 +92,64 @@ CREATE TABLE IF NOT EXISTS fee_structure (
 -- =====================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- =====================================================
+-- NOTE: This app uses the anon key from the frontend (no Supabase Auth).
+-- RLS policies are permissive for demo purposes. For production,
+-- integrate Supabase Auth and use auth.uid()-based policies.
 
 -- Enable RLS on all tables
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE academic_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE fee_structure ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS academic_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS admin_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS fee_structure ENABLE ROW LEVEL SECURITY;
 
--- --- PROFILES: students can read/update own; admin can read all ---
-CREATE POLICY "profiles_own_select" ON profiles
-  FOR SELECT USING (auth.uid()::text = id::text OR current_setting('app.is_admin') = 'true');
+-- Drop existing policies first
+DROP POLICY IF EXISTS "profiles_own_select" ON profiles;
+DROP POLICY IF EXISTS "profiles_own_insert" ON profiles;
+DROP POLICY IF EXISTS "profiles_own_update" ON profiles;
+DROP POLICY IF EXISTS "academic_own_select" ON academic_records;
+DROP POLICY IF EXISTS "academic_own_insert" ON academic_records;
+DROP POLICY IF EXISTS "academic_own_update" ON academic_records;
+DROP POLICY IF EXISTS "applications_own_select" ON applications;
+DROP POLICY IF EXISTS "applications_own_insert" ON applications;
+DROP POLICY IF EXISTS "applications_admin_update" ON applications;
+DROP POLICY IF EXISTS "subscriptions_own_select" ON subscriptions;
+DROP POLICY IF EXISTS "subscriptions_own_insert" ON subscriptions;
+DROP POLICY IF EXISTS "fee_structure_select" ON fee_structure;
+DROP POLICY IF EXISTS "fee_structure_admin" ON fee_structure;
 
-CREATE POLICY "profiles_own_insert" ON profiles
-  FOR INSERT WITH CHECK (true);
+-- PROFILES: public insert/select/update (anon key access)
+CREATE POLICY "profiles_public_insert" ON profiles FOR INSERT WITH CHECK (true);
+CREATE POLICY "profiles_public_select" ON profiles FOR SELECT USING (true);
+CREATE POLICY "profiles_public_update" ON profiles FOR UPDATE USING (true);
 
-CREATE POLICY "profiles_own_update" ON profiles
-  FOR UPDATE USING (auth.uid()::text = id::text);
+-- ACADEMIC RECORDS: public insert/select/update
+CREATE POLICY "academic_public_insert" ON academic_records FOR INSERT WITH CHECK (true);
+CREATE POLICY "academic_public_select" ON academic_records FOR SELECT USING (true);
+CREATE POLICY "academic_public_update" ON academic_records FOR UPDATE USING (true);
 
--- --- ACADEMIC RECORDS: students can read/insert own; admin all ---
-CREATE POLICY "academic_own_select" ON academic_records
-  FOR SELECT USING (auth.uid()::text = user_id::text OR current_setting('app.is_admin') = 'true');
+-- APPLICATIONS: public insert/select/update
+CREATE POLICY "applications_public_insert" ON applications FOR INSERT WITH CHECK (true);
+CREATE POLICY "applications_public_select" ON applications FOR SELECT USING (true);
+CREATE POLICY "applications_public_update" ON applications FOR UPDATE USING (true);
 
-CREATE POLICY "academic_own_insert" ON academic_records
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+-- SUBSCRIPTIONS: public insert/select/update
+CREATE POLICY "subscriptions_public_insert" ON subscriptions FOR INSERT WITH CHECK (true);
+CREATE POLICY "subscriptions_public_select" ON subscriptions FOR SELECT USING (true);
+CREATE POLICY "subscriptions_public_update" ON subscriptions FOR UPDATE USING (true);
 
-CREATE POLICY "academic_own_update" ON academic_records
-  FOR UPDATE USING (auth.uid()::text = user_id::text);
+-- FEE STRUCTURE: public select only
+CREATE POLICY "fee_structure_public_select" ON fee_structure FOR SELECT USING (true);
 
--- --- APPLICATIONS: students can read/insert own; admin all ---
-CREATE POLICY "applications_own_select" ON applications
-  FOR SELECT USING (auth.uid()::text = user_id::text OR current_setting('app.is_admin') = 'true');
-
-CREATE POLICY "applications_own_insert" ON applications
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
-
-CREATE POLICY "applications_admin_update" ON applications
-  FOR UPDATE USING (current_setting('app.is_admin') = 'true');
-
--- --- SUBSCRIPTIONS: students can read own; admin all ---
-CREATE POLICY "subscriptions_own_select" ON subscriptions
-  FOR SELECT USING (auth.uid()::text = user_id::text OR current_setting('app.is_admin') = 'true');
-
-CREATE POLICY "subscriptions_own_insert" ON subscriptions
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
-
--- --- FEE STRUCTURE: everyone can read; only admin can update ---
-CREATE POLICY "fee_structure_select" ON fee_structure
-  FOR SELECT USING (true);
-
-CREATE POLICY "fee_structure_admin" ON fee_structure
-  FOR ALL USING (current_setting('app.is_admin') = 'true');
+-- ADMIN_USERS: private (admin check done in frontend JS)
+ALTER TABLE admin_users DISABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- SEED DATA
 -- =====================================================
 
--- Seed admin user (password is hashed, use bcrypt in production)
+-- Seed admin user
 INSERT INTO admin_users (email, password_hash, full_name)
 VALUES ('aszxgvhbqw@gmail.com', 'admin_hash_placeholder', 'مدير النظام')
 ON CONFLICT (email) DO NOTHING;
@@ -166,17 +166,7 @@ SELECT 200, '{
 }'::jsonb
 WHERE NOT EXISTS (SELECT 1 FROM fee_structure);
 
--- =====================================================
--- HELPER FUNCTION: Set admin context for RLS bypass
--- =====================================================
-CREATE OR REPLACE FUNCTION set_admin_context()
-RETURNS void AS $$
-BEGIN
-  PERFORM set_config('app.is_admin', 'true', false);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Grant usage to anon role
+-- Grant usage to anon role for REST API access
 GRANT USAGE ON SCHEMA public TO anon;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon;

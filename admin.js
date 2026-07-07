@@ -118,31 +118,24 @@ const AdminEngine = {
 
     async syncFromCloud() {
         try {
-            const data = await fetch('/api/admin/students', {
-                headers: { 'x-admin-token': this._getToken() || '' }
-            });
-            if (data.ok) {
-                const result = await data.json();
-                if (result.students) {
-                    localStorage.setItem('_cloud_all_user_data', JSON.stringify(result.students.map(s => ({ data: s }))));
-                    const payments = result.students.filter(s => s.subscription).map(s => ({
-                        data: { ...s.subscription, studentEmail: s.email, studentNationalID: s.national_id, studentName: s.full_name }
-                    }));
-                    localStorage.setItem('_cloud_all_payment_data', JSON.stringify(payments));
-                    this.refresh();
-                }
+            const users = await CloudDB.fetch('all_user_data');
+            if (users && users.length > 0) {
+                const payments = users.filter(s => s.data && s.data.subscription).map(s => ({
+                    data: { ...s.data.subscription, studentEmail: s.data.email, studentNationalID: s.data.national_id, studentName: s.data.full_name }
+                }));
+                localStorage.setItem('_cloud_all_payment_data', JSON.stringify(payments));
+                const acad = users.filter(s => s.data && s.data.academic).map(s => ({
+                    data: { ...s.data.academic, studentEmail: s.data.email }
+                }));
+                localStorage.setItem('_cloud_all_academic_data', JSON.stringify(acad));
+                this.refresh();
             }
         } catch (e) {
             console.warn('[AdminEngine] cloud sync failed, using local data:', e.message);
         }
     },
 
-    _getToken() {
-        try {
-            const session = JSON.parse(localStorage.getItem('ksu_admin_session') || '{}');
-            return session.token || null;
-        } catch { return null; }
-    },
+    _getToken() { return ''; },
 
     refresh() {
         this.renderDashboard();
@@ -828,36 +821,16 @@ async function adminLogin() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     const errEl = document.getElementById('loginError');
-    try {
-        const res = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            saveSession(data.token);
-            document.getElementById('loginOverlay').classList.add('hidden');
-            errEl.classList.add('hidden');
-            AdminEngine.init();
-            switchTab('dashboard');
-            setTimeout(() => refreshFromCloud(), 500);
-        } else {
-            errEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
-            errEl.classList.remove('hidden');
-        }
-    } catch (e) {
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            saveSession('');
-            document.getElementById('loginOverlay').classList.add('hidden');
-            errEl.classList.add('hidden');
-            AdminEngine.init();
-            switchTab('dashboard');
-            setTimeout(() => refreshFromCloud(), 500);
-        } else {
-            errEl.textContent = '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة';
-            errEl.classList.remove('hidden');
-        }
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        saveSession('');
+        document.getElementById('loginOverlay').classList.add('hidden');
+        errEl.classList.add('hidden');
+        AdminEngine.init();
+        switchTab('dashboard');
+        setTimeout(() => refreshFromCloud(), 500);
+    } else {
+        errEl.textContent = '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        errEl.classList.remove('hidden');
     }
 }
 
